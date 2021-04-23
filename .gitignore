@@ -2,7 +2,7 @@ experiments
 temp_dir
 .vscode
 __pycache__
-
+*.pth
 *.pyc
 /Readme.md
 /__pycache__
