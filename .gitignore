@@ -1,0 +1,14 @@
+experiments
+temp_dir
+.vscode
+__pycache__
+
+*.pyc
+/Readme.md
+/__pycache__
+/plot.png
+/test_resnet.sh
+/test_vgg.sh
+/train_resnet.sh
+/train_vgg.sh
+/trainingDPT.sh
