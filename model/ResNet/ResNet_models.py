@@ -160,7 +160,7 @@ class RCAB(nn.Module):
 
 class ResNet_Baseline(nn.Module):
     # resnet based encoder decoder
-    def __init__(self, channel=256):
+    def __init__(self, channel=256, use_pretrain=True):
         super(ResNet_Baseline, self).__init__()
         self.resnet = B2_ResNet()
         self.upsample8 = nn.Upsample(scale_factor=8, mode='bilinear', align_corners=True)
@@ -172,7 +172,8 @@ class ResNet_Baseline(nn.Module):
         self.conv2 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], channel, 512)
         self.conv1 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], channel, 256)
         self.racb_4321 = RCAB(channel * 4)
-        self.layer5 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, channel * 4 )
+        self.layer5 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, channel * 4)
+        self.use_pretrain = use_pretrain
 
         if self.training:
             self.initialize_weights()
@@ -203,7 +204,7 @@ class ResNet_Baseline(nn.Module):
         return [self.upsample4(x5)]
 
     def initialize_weights(self):
-        res50 = models.resnet50(pretrained=True)
+        res50 = models.resnet50(pretrained=self.use_pretrain)
         pretrained_dict = res50.state_dict()
         all_params = {}
         for k, v in self.resnet.state_dict().items():

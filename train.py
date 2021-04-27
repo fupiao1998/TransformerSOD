@@ -13,6 +13,8 @@ from torch.optim import lr_scheduler
 from utils import AvgMeter, set_seed, visualize_all
 from model.get_model import get_model
 from loss.get_loss import get_loss, cal_loss
+from loss.StructureConsistency import SaliencyStructureConsistency
+from img_trans import rot_trans, scale_trans
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -39,10 +41,13 @@ def train_one_epoch(model, generator_optimizer, train_loader, loss_fun):
                 images = F.upsample(images, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
                 gts = F.upsample(gts, size=(trainsize, trainsize), mode='bilinear', align_corners=True)
             ref_pre = model(images)
-            loss = cal_loss(ref_pre, gts, loss_fun)
+            images_trans, ref_pre_trans = scale_trans(images, ref_pre)
+            images_trans_pre = model(images_trans)
+            # import pdb; pdb.set_trace()
+            loss = cal_loss(ref_pre, gts, loss_fun) + 0.5*SaliencyStructureConsistency(torch.sigmoid(ref_pre_trans[0]), torch.sigmoid(images_trans_pre[0]))
             loss.backward()
             generator_optimizer.step()
-            visualize_all(torch.sigmoid(ref_pre[0]), gts, option['log_path'])
+            visualize_all(torch.sigmoid(ref_pre_trans[0]), torch.sigmoid(images_trans_pre[0]), option['log_path'])
 
             if rate == 1:
                 loss_record.update(loss.data, option['batch_size'])

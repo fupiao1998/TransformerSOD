@@ -9,17 +9,17 @@ from model.Fusion.CrossFusionNet import CrossFusionSegmentationModel
 def get_model(option):
     model_name = option['model_name']
     if model_name == 'DPT':
-        model = DPTSegmentationModel(1, backbone=option['backbone_name']).cuda()
+        model = DPTSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
     elif model_name == 'DPTDS':
-        model = DPTSegmentationModelDS(1, backbone=option['backbone_name']).cuda()
+        model = DPTSegmentationModelDS(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
     elif model_name == 'ResNet':
-        model = ResNet_Baseline()
+        model = ResNet_Baseline(use_pretrain=option['use_pretrain'])
     elif model_name == 'VGG':
         model = VGG_Baseline()
     elif model_name == 'LateFusion':
-        model = LateFusionSegmentationModel(1, backbone=option['backbone_name']).cuda()
+        model = LateFusionSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
     elif model_name == 'CrossFusion':
-        model = CrossFusionSegmentationModel(1, backbone=option['backbone_name']).cuda()
+        model = CrossFusionSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
     else:
         print("[ERROR]: No model named {}, please attention!!".format(model_name))
         exit()

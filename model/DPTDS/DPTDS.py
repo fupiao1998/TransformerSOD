@@ -47,6 +47,7 @@ class DPT(BaseModel):
         channels_last=False,
         use_bn=False,
         enable_attention_hooks=False,
+        use_pretrain=True
     ):
 
         super(DPT, self).__init__()
@@ -63,7 +64,7 @@ class DPT(BaseModel):
         self.pretrained, self.scratch = _make_encoder(
             backbone,
             features,
-            True,  # Set to true of you want to train from scratch, uses ImageNet weights
+            use_pretrain,  # Set to true of you want to train from scratch, uses ImageNet weights
             groups=1,
             expand=False,
             exportable=False,
