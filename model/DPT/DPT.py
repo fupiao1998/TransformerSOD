@@ -9,6 +9,7 @@ from model.DPT.blocks import (
     _make_encoder,
     forward_vit,
 )
+from model.DPT.attention import AttentionConv
 
 
 class BaseModel(torch.nn.Module):
@@ -47,12 +48,14 @@ class DPT(BaseModel):
         channels_last=False,
         use_bn=False,
         enable_attention_hooks=False,
-        use_pretrain=True
+        use_pretrain=True,
+        use_attention=False
     ):
 
         super(DPT, self).__init__()
 
         self.channels_last = channels_last
+        self.attention = use_attention
 
         hooks = {
             "vitb_rn50_384": [0, 1, 8, 11],
@@ -79,6 +82,11 @@ class DPT(BaseModel):
         self.scratch.refinenet4 = _make_fusion_block(features, use_bn)
 
         self.scratch.output_conv = head
+        if self.attention:
+            self.att_conv1 = AttentionConv(in_channels=256, out_channels=256, kernel_size=3, padding=1, groups=4)
+            self.att_conv2 = AttentionConv(in_channels=256, out_channels=256, kernel_size=3, padding=1, groups=4)
+        else:
+            self.att_conv1, self.att_conv2 = None, None
 
     def forward(self, x):
         # x = torch.Size([1, 3, 384, 672])
@@ -92,6 +100,9 @@ class DPT(BaseModel):
         layer_3_rn = self.scratch.layer3_rn(layer_3)
         layer_4_rn = self.scratch.layer4_rn(layer_4)
 
+        if self.att_conv1 is not None and self.att_conv2 is not None:
+            layer_4_rn = self.att_conv1(layer_4_rn)
+            layer_4_rn = self.att_conv2(layer_4_rn)
         path_4 = self.scratch.refinenet4(layer_4_rn)
         path_3 = self.scratch.refinenet3(path_4, layer_3_rn)
         path_2 = self.scratch.refinenet2(path_3, layer_2_rn)

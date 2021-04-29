@@ -6,7 +6,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Decide Which Task to Training')
 parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'FIXSOD', 'FIXCOD'])
 parser.add_argument('--model', type=str, default='LateFusion', 
-                    choices=['DPT', 'VGG', 'ResNet', 'LateFusion', 'CrossFusion', 'DPTDS'])
+                    choices=['DPT', 'VGG', 'ResNet', 'LateFusion', 'CrossFusion', 'DPTDS', 'swin'])
 parser.add_argument('--training_path', type=str, default='/home1/datasets/SOD_COD/DUTS/')
 parser.add_argument('--log_info', type=str, default='REMOVE')
 parser.add_argument('--ckpt', type=str, default='COD')
@@ -17,17 +17,18 @@ param = {}
 param['task'] = args.task
 
 # Training Config
-param['epoch'] = 100           # 训练轮数
+param['epoch'] = 50           # 训练轮数
 param['seed'] = 1234          # 随机种子 
 param['batch_size'] = 8       # 批大小
 param['save_epoch'] = 5       # 每隔多少轮保存一次模型
-param['lr'] = 5.0e-5          # 学习率
-param['trainsize'] = 352      # 训练图片尺寸
+param['lr'] = 2.5e-5          # 学习率
+param['trainsize'] = 384      # 训练图片尺寸
 param['decay_rate'] = 0.5
 param['decay_epoch'] = 20
 param['beta'] = [0.5, 0.999]  # Adam参数
 param['size_rates'] = [1]     # 多尺度训练  [0.75, 1, 1.25]/[1]
-param['use_pretrain'] = False
+param['use_pretrain'] = True
+param['attention_decoder'] = True
 
 
 # Backbone Config

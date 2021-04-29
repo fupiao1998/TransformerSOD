@@ -4,12 +4,13 @@ from model.VGG.vgg_models import VGG_Baseline
 from model.ResNet.ResNet_models import ResNet_Baseline
 from model.Fusion.LateFusionNet import LateFusionSegmentationModel
 from model.Fusion.CrossFusionNet import CrossFusionSegmentationModel
+from model.swin.swin import Swin
 
 
 def get_model(option):
     model_name = option['model_name']
     if model_name == 'DPT':
-        model = DPTSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
+        model = DPTSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain'], use_attention=option['attention_decoder']).cuda()
     elif model_name == 'DPTDS':
         model = DPTSegmentationModelDS(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
     elif model_name == 'ResNet':
@@ -20,6 +21,8 @@ def get_model(option):
         model = LateFusionSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
     elif model_name == 'CrossFusion':
         model = CrossFusionSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
+    elif model_name == 'swin':
+        model = Swin(option['trainsize']).cuda()
     else:
         print("[ERROR]: No model named {}, please attention!!".format(model_name))
         exit()
