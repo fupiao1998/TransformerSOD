@@ -12,17 +12,20 @@ import torch.nn as nn
 
 from collections import OrderedDict
 from .layers import *
+from model.blocks.attention import AttentionConv
 
 
 class DepthDecoder(nn.Module):
     # def __init__(self, num_ch_enc, scales=range(4), num_output_channels=1, use_skips=True):
-    def __init__(self, scales=range(4), num_output_channels=1, use_skips=True):
+    def __init__(self, scales=range(4), num_output_channels=1, use_skips=True, use_multi_scale=True, use_attention=False):
         super(DepthDecoder, self).__init__()
 
         self.num_output_channels = num_output_channels
         self.use_skips = use_skips
         self.upsample_mode = 'nearest'
         self.scales = scales
+        self.use_multi_scale = use_multi_scale
+        self.use_attention = use_attention
 
         # self.num_ch_enc = np.array([96, 192, 384, 768])
         self.num_ch_enc = np.array([128, 256, 512, 1024, 1024])
@@ -50,6 +53,11 @@ class DepthDecoder(nn.Module):
             self.convs[("dispconv", s)] = Conv3x3(self.num_ch_dec[s], self.num_output_channels)
 
         self.decoder = nn.ModuleList(list(self.convs.values()))
+        if self.use_attention:
+            self.att_conv1 = AttentionConv(in_channels=1280, out_channels=1280, kernel_size=3, padding=1, groups=4)
+            self.att_conv2 = AttentionConv(in_channels=640, out_channels=640, kernel_size=3, padding=1, groups=4)
+        else:
+            self.att_conv1, self.att_conv2 = None, None
 
     def forward(self, input_features):
         self.outputs = {}
@@ -67,11 +75,21 @@ class DepthDecoder(nn.Module):
             if self.use_skips and i > 0:
                 x += [upsample(input_features[i - 1])]
             x = torch.cat(x, 1)
+            if self.att_conv1 is not None and i == 4:
+                x = self.att_conv1(x)
+            elif self.att_conv2 is not None and i == 3:
+                x = self.att_conv2(x)
+
             x = self.convs[("upconv", i, 1)](x)
             if i in self.scales:
                 output_list.append(self.convs[("dispconv", i)](x))
-
-        return output_list[-1]
+        if self.use_multi_scale:
+            output_list[0] = F.interpolate(output_list[0], scale_factor=8, mode="bilinear", align_corners=False)
+            output_list[1] = F.interpolate(output_list[1], scale_factor=4, mode="bilinear", align_corners=False)
+            output_list[2] = F.interpolate(output_list[2], scale_factor=2, mode="bilinear", align_corners=False)
+            return output_list
+        else:
+            return output_list[-1]
 
 
 class DepthDecoderUp(nn.Module):

@@ -64,7 +64,7 @@ print('[INFO] Experiments saved in: ', param['training_info'])
 
 
 # Test Config
-param['testsize'] = 352
+param['testsize'] = 384
 param['checkpoint'] = args.ckpt
 param['eval_save_path'] = param['log_path'] + '/save_images/'         # eval image保存路径
 if param['task'] == 'COD':

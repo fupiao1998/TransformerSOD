@@ -9,7 +9,7 @@ from model.DPT.blocks import (
     _make_encoder,
     forward_vit,
 )
-from model.DPT.attention import AttentionConv
+from model.blocks.attention import AttentionConv
 
 
 class BaseModel(torch.nn.Module):
