@@ -217,7 +217,7 @@ class Swin(torch.nn.Module):
         x4 = self.conv4(x4)
         x5 = self.conv5(x5)
 
-        edge_map = self.edge_layer(x1, x4, x5)
+        edge_map = self.edge_layer(x1, x3, x5)
         edge_out = self.upsample4(torch.sigmoid(edge_map))
 
         im_arr = raw_x.cpu().numpy().transpose((0, 2, 3, 1)).astype(np.uint8)

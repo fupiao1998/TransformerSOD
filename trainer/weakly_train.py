@@ -55,7 +55,7 @@ def train_one_epoch(epoch, model, generator_optimizer, train_loader, loss_fun):
 
             loss.backward()
             generator_optimizer.step()
-            visualize_list([torch.sigmoid(ref_pre[0]), gts, edge_map, label_edge_prediction(edges_gt)], option['log_path'])
+            visualize_list([torch.sigmoid(ref_pre[0]), gts, torch.sigmoid(edge_map), label_edge_prediction(edges_gt)], option['log_path'])
 
             if rate == 1:
                 loss_record.update(loss.data, option['batch_size'])
