@@ -4,7 +4,7 @@ import argparse
 
 
 parser = argparse.ArgumentParser(description='Decide Which Task to Training')
-parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'FIXSOD', 'FIXCOD'])
+parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'RGBD-SOD', 'Weak-RGB-SOD'])
 parser.add_argument('--model', type=str, default='LateFusion', 
                     choices=['DPT', 'VGG', 'ResNet', 'LateFusion', 'CrossFusion', 'DPTDS', 'swin'])
 parser.add_argument('--training_path', type=str, default='/home1/datasets/SOD_COD/DUTS/')
@@ -28,7 +28,9 @@ param['decay_epoch'] = 20
 param['beta'] = [0.5, 0.999]  # Adam参数
 param['size_rates'] = [1]     # 多尺度训练  [0.75, 1, 1.25]/[1]
 param['use_pretrain'] = True
-param['attention_decoder'] = True
+param['attention_decoder'] = False
+param['scale_trans_radio'] = 0  # Default 0.5
+param['rot_trans_radio'] = 0    # Default 0.5
 
 
 # Backbone Config
@@ -45,14 +47,17 @@ elif param['task'] == 'SOD':
     param['image_root'] = args.training_path + '/img/'
     param['gt_root'] = args.training_path + '/gt/'
     param['test_dataset_root'] = '/home1/datasets/SOD_COD/SOD_RGB/'
-elif param['task'] == 'FIXSOD':
-    param['image_root'] = '/data/maoyuxin/datasets/COD_datasets/FixationSOD/images/train/'
-    param['gt_root'] = '/data/maoyuxin/datasets/COD_datasets/FixationSOD/gt/train/'
-    param['test_dataset_root'] = '/data/maoyuxin/datasets/COD_datasets/FixationSOD/images/val/'
-elif param['task'] == 'FIXCOD':
-    param['image_root'] = '/data/maoyuxin/datasets/COD_datasets/FixationCOD/train/img/'
-    param['gt_root'] = '/data/maoyuxin/datasets/COD_datasets/FixationCOD/train/fix/'
-    param['test_dataset_root'] = '/data/maoyuxin/datasets/COD_datasets/FixationCOD/test/img/'
+elif param['task'] == 'RGBD-SOD':
+    param['image_root'] = '/home1/datasets/SOD_COD/RGBD_SOD/train/RGB/'
+    param['gt_root'] = '/home1/datasets/SOD_COD/RGBD_SOD/train/GT/'
+    param['depth_root'] = '/home1/datasets/SOD_COD/RGBD_SOD/train/depth/'
+    param['test_dataset_root'] = '/home1/datasets/SOD_COD/RGBD_SOD/test/'
+elif param['task'] == 'Weak-RGB-SOD':
+    param['image_root'] = '/home1/datasets/SOD_COD/Scribble_SOD/img/'
+    param['gt_root'] = '/home1/datasets/SOD_COD/Scribble_SOD/gt/'
+    param['mask_root'] = '/home1/datasets/SOD_COD/Scribble_SOD/mask/'
+    param['gray_root'] = '/home1/datasets/SOD_COD/Scribble_SOD/gray/'
+    param['test_dataset_root'] = '/home1/datasets/SOD_COD/SOD_RGB/'
 
 
 # Experiment Dir Config

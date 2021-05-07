@@ -5,8 +5,6 @@ def get_loss(option):
     task = option['task']
     if task == 'COD' or task == 'SOD':
         loss_fun = structure_loss
-    elif task == 'FIXCOD' or task == 'FIXSOD':
-        loss_fun = torch.nn.BCEWithLogitsLoss()
 
     return loss_fun
 
