@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from tqdm import tqdm
 from config import param as option
 from torch.autograd import Variable
-from utils import AvgMeter, visualize_all, label_edge_prediction
+from utils import AvgMeter, visualize_all, label_edge_prediction, visualize_list
 from loss.get_loss import get_loss, cal_loss
 from loss.StructureConsistency import SaliencyStructureConsistency
 from img_trans import rot_trans, scale_trans
@@ -38,12 +38,12 @@ def train_one_epoch(epoch, model, generator_optimizer, train_loader, loss_fun):
             # Inference Twice if Necessary
             if option['scale_trans_radio'] > 0:
                 images_trans, ref_pre_trans = scale_trans(images, ref_pre)
-                images_trans_pre = model(images_trans)
+                images_trans_pre, _ = model(images_trans)
                 cycle_loss = SaliencyStructureConsistency(torch.sigmoid(ref_pre_trans[0]), torch.sigmoid(images_trans_pre[0]))
                 loss = supervised_loss + option['scale_trans_radio']*cycle_loss + edge_loss
             elif option['rot_trans_radio'] > 0:
                 images_trans, ref_pre_trans = rot_trans(images, ref_pre)
-                images_trans_pre = model(images_trans)
+                images_trans_pre, _ = model(images_trans)
                 cycle_loss = SaliencyStructureConsistency(torch.sigmoid(ref_pre_trans[0]), torch.sigmoid(images_trans_pre[0]))
                 loss = supervised_loss + option['scale_trans_radio']*cycle_loss + edge_loss
             else:
@@ -51,7 +51,7 @@ def train_one_epoch(epoch, model, generator_optimizer, train_loader, loss_fun):
 
             loss.backward()
             generator_optimizer.step()
-            visualize_all(torch.sigmoid(ref_pre[0]), gts, option['log_path'])
+            visualize_list([torch.sigmoid(ref_pre[0]), gts, torch.sigmoid(edge_map), edges_gt], option['log_path'])
 
             if rate == 1:
                 loss_record.update(loss.data, option['batch_size'])

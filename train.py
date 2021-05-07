@@ -16,7 +16,11 @@ from loss.get_loss import get_loss, cal_loss
 from loss.StructureConsistency import SaliencyStructureConsistency
 from img_trans import rot_trans, scale_trans
 from torch.utils.tensorboard import SummaryWriter
-from trainer.basic_train import train_one_epoch
+
+if option['task'] == 'Weak-RGB-SOD':
+    from trainer.weakly_train import train_one_epoch
+elif option['task'] == 'SOD':     
+    from trainer.basic_train import train_one_epoch
 
 
 def get_optim(option, params):

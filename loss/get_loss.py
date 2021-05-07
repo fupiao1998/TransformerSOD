@@ -3,8 +3,8 @@ from loss.structure_loss import structure_loss
 
 def get_loss(option):
     task = option['task']
-    if task == 'COD' or task == 'SOD':
-        loss_fun = structure_loss
+    # if task == 'COD' or task == 'SOD':
+    loss_fun = structure_loss
 
     return loss_fun
 

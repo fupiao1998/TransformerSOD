@@ -19,7 +19,7 @@ param['task'] = args.task
 # Training Config
 param['epoch'] = 50           # 训练轮数
 param['seed'] = 1234          # 随机种子 
-param['batch_size'] = 8       # 批大小
+param['batch_size'] = 4       # 批大小
 param['save_epoch'] = 5       # 每隔多少轮保存一次模型
 param['lr'] = 2.5e-5          # 学习率
 param['trainsize'] = 384      # 训练图片尺寸
@@ -62,7 +62,7 @@ elif param['task'] == 'Weak-RGB-SOD':
 
 # Experiment Dir Config
 log_info = args.model + '_' + args.log_info    # 这个参数可以定义本次实验的名字
-param['training_info'] = param['task'] + '_' + param['backbone_name'] + '_' + str(param['lr']) + '_' + log_info
+param['training_info'] = param['task'] + '_' + str(param['lr']) + '_' + log_info
 param['log_path'] = 'experiments/{}'.format(param['training_info'])   # 日志保存路径
 param['ckpt_save_path'] = param['log_path'] + '/models/'              # 权重保存路径
 print('[INFO] Experiments saved in: ', param['training_info'])

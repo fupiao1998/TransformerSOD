@@ -125,3 +125,19 @@ def visualize_all(in_pred, in_gt, path):
             os.makedirs(save_path)
         name = '{:02d}_cat.png'.format(kk)
         cv2.imwrite(save_path + name, cat_img)
+
+
+def visualize_list(input_list, path):
+    for kk in range(input_list[0].shape[0]):
+        show_list = []
+        for i in input_list:
+            tmp = i[kk, :, :, :]
+            tmp = (tmp.detach().cpu().numpy().squeeze()*255.0).astype(np.uint8)
+            show_list.append(tmp)
+        cat_img = cv2.hconcat(show_list)
+        save_path = path + '/vis_temp/'   
+        # Save vis images this temp folder, based on this experiment's folder.
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        name = '{:02d}_cat.png'.format(kk)
+        cv2.imwrite(save_path + name, cat_img)
