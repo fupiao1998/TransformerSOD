@@ -28,6 +28,9 @@ param['decay_epoch'] = 20
 param['beta'] = [0.5, 0.999]  # Adam参数
 param['size_rates'] = [1]     # 多尺度训练  [0.75, 1, 1.25]/[1]
 param['use_pretrain'] = True
+
+
+# Model Config
 param['attention_decoder'] = False
 param['scale_trans_radio'] = 0  # Default 0.5
 param['rot_trans_radio'] = 0    # Default 0.5

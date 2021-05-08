@@ -5,16 +5,13 @@ import torch
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 from tqdm import tqdm
-from data import get_loader
-from img_trans import scale_trans
+from dataset.get_loader import get_loader
 from config import param as option
 from torch.autograd import Variable
 from torch.optim import lr_scheduler
 from utils import AvgMeter, set_seed, visualize_all
 from model.get_model import get_model
 from loss.get_loss import get_loss, cal_loss
-from loss.StructureConsistency import SaliencyStructureConsistency
-from img_trans import rot_trans, scale_trans
 from torch.utils.tensorboard import SummaryWriter
 
 if option['task'] == 'Weak-RGB-SOD':
