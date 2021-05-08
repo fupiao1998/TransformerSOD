@@ -248,6 +248,11 @@ def ssim( pred, gt):
     return Q
 
 
+parser = argparse.ArgumentParser(description='Decide Which Task to Training')
+parser.add_argument('--save_dir', type=str, default=None)
+args = parser.parse_args()
+
+
 task = "SOD"
 if task == "SOD":
     gt_dir = "/home1/datasets/SOD_COD/SOD_RGB/"
@@ -258,7 +263,7 @@ elif task == "COD":
 elif task == "RGBD-SOD":
     gt_dir = "/data/maoyuxin/codes/COD/rgbd_sod/dataset/test/"
     test_datasets = ['NJU2K', 'DES', 'NLPR', 'LFSD', 'SIP', 'STERE']
-pred_dir = 'experiments/SOD_vitb_rn50_384_2.5e-05_DPTDS_EPOCH50/save_images/50_epoch/'
+pred_dir = args.save_dir
 print(pred_dir)
 
 latex_str = ""
