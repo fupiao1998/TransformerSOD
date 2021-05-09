@@ -1,9 +1,9 @@
 import os
-from PIL import Image
 import torch.utils.data as data
 import torchvision.transforms as transforms
 import random
 import numpy as np
+from PIL import Image
 from PIL import ImageEnhance
 from dataset.augment import cv_random_flip_rgb, randomCrop_rgb, randomRotation_rgb
 from dataset.augment import cv_random_flip_rgbd, randomCrop_rgbd, randomRotation_rgbd

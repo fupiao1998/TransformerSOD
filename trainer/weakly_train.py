@@ -36,13 +36,13 @@ def train_one_epoch(epoch, model, generator_optimizer, train_loader, loss_fun):
             img_size = images.size(2) * images.size(3) * images.size(0)
             ratio = img_size / torch.sum(masks)
 
-            images_trans, ref_pre_trans = scale_trans(images, ref_pre, scale_rate=0.3)
-            # images_trans_pre, _ = model(images_trans)
-            # cycle_loss = SaliencyStructureConsistency(torch.sigmoid(ref_pre_trans[0]), torch.sigmoid(images_trans_pre[0]), alpha=0.85)
+            images_trans, ref_pre_trans = rot_trans(images, ref_pre)
+            images_trans_pre, _ = model(images_trans)
+            cycle_loss = SaliencyStructureConsistency(torch.sigmoid(ref_pre_trans[0]), torch.sigmoid(images_trans_pre[0]), alpha=0.85)
 
-            sample = {'rgb': images_trans}
-            loss_lsc_sal = loss_lsc(torch.sigmoid(ref_pre_trans[0]), loss_lsc_kernels_desc_defaults, loss_lsc_radius, 
-                                    sample, images_trans.shape[2], images_trans.shape[3])['loss']
+            sample = {'rgb': images.clone()}
+            loss_lsc_sal = loss_lsc(torch.sigmoid(ref_pre[0]), loss_lsc_kernels_desc_defaults, loss_lsc_radius, 
+                                    sample, images.shape[2], images.shape[3])['loss']
 
             sal_prob = torch.sigmoid(ref_pre[0])
             sal_prob = sal_prob * masks
@@ -51,7 +51,7 @@ def train_one_epoch(epoch, model, generator_optimizer, train_loader, loss_fun):
 
             edges_gt = torch.sigmoid(ref_pre[0]).detach()
             edge_loss = 1.0 * CE(torch.sigmoid(edge_map), label_edge_prediction(edges_gt))
-            loss = edge_loss + sal_loss
+            loss = edge_loss + sal_loss + cycle_loss
 
             loss.backward()
             generator_optimizer.step()

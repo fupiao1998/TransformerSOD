@@ -288,5 +288,7 @@ result_table = pd.DataFrame(data=np.vstack((results_list)), columns=columns_pd, 
 # import pdb; pdb.set_trace()
 with open(pred_dir+'eval_results.csv', 'w') as f:
     result_table.to_csv(f, float_format="%.5f")
+with open(pred_dir+'eval_results_latex_str.txt', 'w') as f:
+        f.write(latex_str)
 print(result_table.to_string(float_format="%.5f"))
 print(latex_str)

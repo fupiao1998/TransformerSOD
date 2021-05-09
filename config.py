@@ -79,8 +79,7 @@ if param['task'] == 'COD':
     param['datasets'] = ['CAMO' , 'CHAMELEON', 'COD10K', 'NC4K']  #'CAMO' , 'CHAMELEON', 'COD10K', 'NC4K'
 elif param['task'] == 'SOD':
     param['datasets'] = ['DUTS', 'ECSSD', 'DUT', 'HKU-IS', 'PASCAL', 'SOD']  # , 'THUR', 'HKU-IS', 'MSRA-B', 'PASCAL', 'ECSSD', 'DUT', 'DUTS'
-    # param['datasets'] = ['MSRA-B', 'PASCAL', 'SOD']
-elif param['task'] == 'FIXSOD':
-    param['datasets'] = ['FIXSOD']
+elif param['task'] == 'Weak-RGB-SOD':
+    param['datasets'] = ['DUTS', 'ECSSD', 'DUT', 'HKU-IS', 'PASCAL', 'SOD']
 elif param['task'] == 'FIXCOD':
     param['datasets'] = ['FIXCOD_Baseline_30']

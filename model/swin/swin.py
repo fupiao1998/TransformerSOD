@@ -210,12 +210,7 @@ class Swin(torch.nn.Module):
         features = self.encoder(x)
 
         x1, x2, x3, x4, x5 = features[-5], features[-4], features[-3], features[-2], features[-1]
-
-        x1 = self.conv1(x1)
-        x2 = self.conv2(x2)
-        x3 = self.conv3(x3)
-        x4 = self.conv4(x4)
-        x5 = self.conv5(x5)
+        x1, x2, x3, x4, x5 = self.conv1(x1), self.conv2(x2), self.conv3(x3), self.conv4(x4), self.conv5(x5)
 
         edge_map = self.edge_layer(x1, x3, x5)
         edge_out = self.upsample4(torch.sigmoid(edge_map))

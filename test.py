@@ -51,8 +51,8 @@ for dataset in test_datasets:
         image_root = option['test_dataset_root'] + dataset + '/Imgs/'
     elif option['task'] == 'SOD':
         image_root = option['test_dataset_root'] + '/Imgs/' + dataset + '/'
-    elif option['task'] == 'FIXSOD':
-        image_root = option['test_dataset_root']
+    elif option['task'] == 'Weak-RGB-SOD':
+        image_root = option['test_dataset_root'] + '/Imgs/' + dataset + '/'
     elif option['task'] == 'FIXCOD':
         image_root = option['test_dataset_root']
 
@@ -62,7 +62,8 @@ for dataset in test_datasets:
         image = image.cuda()
         torch.cuda.synchronize()
         start = time.time()
-        res = generator.forward(image)[-1]   # Inference and get the last one of the output list
+        res, _ = generator.forward(image)
+        res = res[-1]   # Inference and get the last one of the output list
         res = F.upsample(res, size=[WW, HH], mode='bilinear', align_corners=False)
         res = res.sigmoid().data.cpu().numpy().squeeze()
         torch.cuda.synchronize()
