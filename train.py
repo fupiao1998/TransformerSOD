@@ -21,7 +21,14 @@ elif option['task'] == 'SOD':
 
 
 def get_optim(option, params):
-    optimizer = torch.optim.Adam(params, option['lr'], betas=option['beta'])
+    optimizer = torch.optim.AdamW(params, option['lr'], betas=option['beta'])
+    scheduler = lr_scheduler.StepLR(optimizer, step_size=option['decay_epoch'], gamma=option['decay_rate'])
+
+    return optimizer, scheduler
+
+
+def get_optim_dis(option, params):
+    optimizer = torch.optim.Adam(params, option['lr_dis'], betas=option['beta'])
     scheduler = lr_scheduler.StepLR(optimizer, step_size=option['decay_epoch'], gamma=option['decay_rate'])
 
     return optimizer, scheduler
@@ -31,13 +38,17 @@ if __name__ == "__main__":
     # Begin the training process
     set_seed(option['seed'])
     loss_fun = get_loss(option)
-    model = get_model(option)
+    model, dis_model = get_model(option)
     optimizer, scheduler = get_optim(option, model.parameters())
+    if dis_model is not None:
+        optimizer_dis, scheduler_dis = get_optim_dis(option, dis_model.parameters())
+    else:
+        optimizer_dis = None
     train_loader = get_loader(option)
-
+    model_list, optimizer_list = [model, dis_model], [optimizer, optimizer_dis]
     writer = SummaryWriter(option['log_path'])
     for epoch in range(1, (option['epoch']+1)):
-        model, loss_record = train_one_epoch(epoch, model, optimizer, train_loader, loss_fun)
+        model, loss_record = train_one_epoch(epoch, model_list, optimizer_list, train_loader, loss_fun)
         writer.add_scalar('loss', loss_record.show(), epoch)
         writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
         scheduler.step()

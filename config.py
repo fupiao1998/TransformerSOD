@@ -19,15 +19,17 @@ param['task'] = args.task
 # Training Config
 param['epoch'] = 50           # 训练轮数
 param['seed'] = 1234          # 随机种子 
-param['batch_size'] = 4       # 批大小
+param['batch_size'] = 6       # 批大小
 param['save_epoch'] = 5       # 每隔多少轮保存一次模型
 param['lr'] = 2.5e-5          # 学习率
+param['lr_dis'] = 1e-5        # learning rate
 param['trainsize'] = 384      # 训练图片尺寸
 param['decay_rate'] = 0.5
 param['decay_epoch'] = 20
 param['beta'] = [0.5, 0.999]  # Adam参数
 param['size_rates'] = [1]     # 多尺度训练  [0.75, 1, 1.25]/[1]
 param['use_pretrain'] = True
+param['confiednce_learning'] = False
 
 
 # Model Config

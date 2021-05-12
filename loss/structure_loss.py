@@ -2,12 +2,16 @@ import torch
 import torch.nn.functional as F
 
 
-def structure_loss(pred, mask):
+def structure_loss(pred, mask, weight=None):
     def generate_smoothed_gt(gts):
         epsilon = 0.001
         new_gts = (1-epsilon)*gts+epsilon/2
         return new_gts
-    weit = 1 + 5 * torch.abs(F.avg_pool2d(mask, kernel_size=31, stride=1, padding=15) - mask)
+    if weight == None:
+        weit = 1 + 5 * torch.abs(F.avg_pool2d(mask, kernel_size=31, stride=1, padding=15) - mask)
+    else:
+        weit = 1 + 5 * weight
+
     new_gts = generate_smoothed_gt(mask)
     wbce = F.binary_cross_entropy_with_logits(pred, new_gts, reduce='none')
     wbce = (weit * wbce).sum(dim=(2, 3)) / weit.sum(dim=(2, 3))

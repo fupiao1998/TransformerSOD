@@ -31,7 +31,7 @@ def eval_mae(loader, cuda=True):
 
 
 # Begin the testing process
-generator = get_model(option)
+generator, discriminator = get_model(option)
 generator.load_state_dict(torch.load(option['checkpoint']))
 generator.eval()
 test_datasets, pre_root = option['datasets'], option['eval_save_path']
@@ -62,7 +62,7 @@ for dataset in test_datasets:
         image = image.cuda()
         torch.cuda.synchronize()
         start = time.time()
-        res, _ = generator.forward(image)
+        res = generator.forward(image)
         res = res[-1]   # Inference and get the last one of the output list
         res = F.upsample(res, size=[WW, HH], mode='bilinear', align_corners=False)
         res = res.sigmoid().data.cpu().numpy().squeeze()
