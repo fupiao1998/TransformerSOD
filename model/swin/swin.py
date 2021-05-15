@@ -1,5 +1,5 @@
 import torch
-from .decoder import DepthDecoder, DepthDecoderUp
+from .decoder import Decoder, DepthDecoderUp, DSSDecoder
 from .swin_encoder import SwinTransformer
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,8 +16,23 @@ def vis_feat(x, features, i):
     cv2.imwrite(str(i)+'.png', im_color)
 
 
+class BasicConv2d(nn.Module):
+    def __init__(self, in_planes, out_planes, kernel_size, stride=1, padding=0, dilation=1):
+        super(BasicConv2d, self).__init__()
+        self.conv_bn = nn.Sequential(
+            nn.Conv2d(in_planes, out_planes,
+                      kernel_size=kernel_size, stride=stride,
+                      padding=padding, dilation=dilation, bias=False),
+            nn.BatchNorm2d(out_planes)
+        )
+
+    def forward(self, x):
+        x = self.conv_bn(x)
+        return x
+
+        
 class Swin(torch.nn.Module):
-    def __init__(self, img_size, use_attention=False):
+    def __init__(self, img_size, use_attention=False, pretrain=None):
         super(Swin, self).__init__()
 
         self.encoder = SwinTransformer(img_size=img_size, 
@@ -26,13 +41,19 @@ class Swin(torch.nn.Module):
                                        num_heads=[4,8,16,32],
                                        window_size=12
                                        )
-        pretrained_dict = torch.load('model/swin/swin_base_patch4_window12_384.pth')["model"]
-        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in self.encoder.state_dict()}
-        self.encoder.load_state_dict(pretrained_dict)
+        if pretrain is not None:
+            pretrained_dict = torch.load(pretrain)["model"]
+            pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in self.encoder.state_dict()}
+            self.encoder.load_state_dict(pretrained_dict)
         
-        self.decoder = DepthDecoder(use_multi_scale=True, use_attention=use_attention)
+        self.decoder = Decoder(use_multi_scale=True, use_attention=use_attention)
+        self.conv_depth = BasicConv2d(6, 3, kernel_size=3, padding=1)
+        # self.decoder = DSSDecoder()
 
-    def forward(self, x):
+    def forward(self, x, depth=None):
+        if depth is not None:
+            x = torch.cat((x, depth), 1)
+            x = self.conv_depth(x)
         features = self.encoder(x)
         # import pdb; pdb.set_trace()
         # List: [8, 128, 96, 96], [8, 256, 48, 48], [8, 512, 24, 24], [8, 1024, 12, 12], [8, 1024, 12, 12]

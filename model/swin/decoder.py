@@ -15,10 +15,10 @@ from .layers import *
 from model.blocks.attention import AttentionConv
 
 
-class DepthDecoder(nn.Module):
+class Decoder(nn.Module):
     # def __init__(self, num_ch_enc, scales=range(4), num_output_channels=1, use_skips=True):
     def __init__(self, scales=range(4), num_output_channels=1, use_skips=True, use_multi_scale=True, use_attention=False):
-        super(DepthDecoder, self).__init__()
+        super(Decoder, self).__init__()
 
         self.num_output_channels = num_output_channels
         self.use_skips = use_skips
@@ -66,7 +66,6 @@ class DepthDecoder(nn.Module):
         # decoder
         x = upsample(input_features[-1])
         for i in range(4, -1, -1):
-        # for i in range(3, -1, -1):
             x = self.convs[("upconv", i, 0)](x)
             if i == 4:
                 x = [x]
@@ -147,3 +146,45 @@ class DepthDecoderUp(nn.Module):
                 self.outputs[("disp", i)] = upsample(self.sigmoid(self.convs[("dispconv", i)](x)))
 
         return self.outputs
+
+
+class DSSDecoder(nn.Module):
+    def __init__(self):
+        super(DSSDecoder, self).__init__()
+        self.conv1_dsn5 = nn.Conv2d(in_channels=1024, out_channels=512, kernel_size=7, padding=3)
+        self.relu1_dsn5 = nn.ReLU(inplace=True)
+        self.conv2_dsn5 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=7, padding=3)
+        self.relu2_dsn5 = nn.ReLU(inplace=True)
+        self.conv3_dsn5 = nn.Conv2d(in_channels=512, out_channels=1, kernel_size=1, padding=0)
+
+        self.conv1_dsn4 = nn.Conv2d(in_channels=1024, out_channels=512, kernel_size=5, padding=2)
+        self.relu1_dsn4 = nn.ReLU(inplace=True)
+        self.conv2_dsn4 = nn.Conv2d(in_channels=512, out_channels=512, kernel_size=5, padding=2)
+        self.relu2_dsn4 = nn.ReLU(inplace=True)
+        self.conv3_dsn4 = nn.Conv2d(in_channels=512, out_channels=1, kernel_size=1, padding=0)
+
+        self.conv1_dsn4 = nn.Conv2d(in_channels=512, out_channels=256, kernel_size=5, padding=2)
+        self.relu1_dsn4 = nn.ReLU(inplace=True)
+        self.conv2_dsn4 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=5, padding=2)
+        self.relu2_dsn4 = nn.ReLU(inplace=True)
+        self.conv3_dsn4 = nn.Conv2d(in_channels=256, out_channels=1, kernel_size=1, padding=0)
+        self.conv4_dsn4 = nn.Conv2d(in_channels=3, out_channels=1, kernel_size=1, padding=0)
+        self.upsample4_dsn6 = nn.ConvTranspose2d(in_channels=1,out_channels=1,kernel_size=8,stride=4,padding=0, bias=True)
+        self.upsample2_dsn5 = nn.ConvTranspose2d(in_channels=1,out_channels=1,kernel_size=4,stride=2,padding=0, bias=True)
+        self.upsample8_in_dsn4 = nn.ConvTranspose2d(in_channels=1,out_channels=1,kernel_size=16,stride=8,padding=0, bias=True)
+
+    def forward(self, features):
+        feat_1, feat_2, feat_3, feat_4, feat_5 = features
+
+        conv_feat_5 = self.conv3_dsn5(self.relu2_dsn5(self.conv2_dsn5(self.relu1_dsn5(self.conv1_dsn5(feat_5)))))
+        out_5 = F.interpolate(conv_feat_5, scale_factor=32, mode="bilinear", align_corners=False)
+
+        conv_feat_4 = self.conv3_dsn4(self.relu2_dsn4(self.conv2_dsn4(self.relu1_dsn4(self.conv1_dsn4(feat_4)))))
+        out_4 = F.interpolate(conv_feat_4, scale_factor=32, mode="bilinear", align_corners=False)
+
+        conv3_dsn4_feat = self.conv3_dsn4(self.relu2_dsn4(self.conv2_dsn4(self.relu1_dsn4(self.conv1_dsn4(relu4_3)))))
+
+
+        import pdb; pdb.set_trace()
+        
+        return [conv4_dsn1_feat, upsample2_in_dsn2_feat, upsample4_in_dsn3_feat, upsample8_in_dsn4_feat, upsample16_in_dsn5_feat, new_score_weighting]

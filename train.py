@@ -12,26 +12,15 @@ from torch.optim import lr_scheduler
 from utils import AvgMeter, set_seed, visualize_all
 from model.get_model import get_model
 from loss.get_loss import get_loss, cal_loss
+from optim.get_optim import get_optim, get_optim_dis
 from torch.utils.tensorboard import SummaryWriter
 
 if option['task'] == 'Weak-RGB-SOD':
     from trainer.weakly_train import train_one_epoch
 elif option['task'] == 'SOD':     
     from trainer.basic_train import train_one_epoch
-
-
-def get_optim(option, params):
-    optimizer = torch.optim.AdamW(params, option['lr'], betas=option['beta'])
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=option['decay_epoch'], gamma=option['decay_rate'])
-
-    return optimizer, scheduler
-
-
-def get_optim_dis(option, params):
-    optimizer = torch.optim.Adam(params, option['lr_dis'], betas=option['beta'])
-    scheduler = lr_scheduler.StepLR(optimizer, step_size=option['decay_epoch'], gamma=option['decay_rate'])
-
-    return optimizer, scheduler
+elif option['task'] == 'RGBD-SOD':
+    from trainer.rgbd_train import train_one_epoch
 
 
 if __name__ == "__main__":
@@ -43,7 +32,7 @@ if __name__ == "__main__":
     if dis_model is not None:
         optimizer_dis, scheduler_dis = get_optim_dis(option, dis_model.parameters())
     else:
-        optimizer_dis = None
+        optimizer_dis, scheduler_dis = None, None
     train_loader = get_loader(option)
     model_list, optimizer_list = [model, dis_model], [optimizer, optimizer_dis]
     writer = SummaryWriter(option['log_path'])
@@ -52,6 +41,8 @@ if __name__ == "__main__":
         writer.add_scalar('loss', loss_record.show(), epoch)
         writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
         scheduler.step()
+        if scheduler_dis is not None:
+            scheduler_dis.step()
 
         save_path = option['ckpt_save_path']
 

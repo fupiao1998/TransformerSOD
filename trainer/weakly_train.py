@@ -7,7 +7,6 @@ from tqdm import tqdm
 from config import param as option
 from torch.autograd import Variable
 from utils import AvgMeter, visualize_all, label_edge_prediction, visualize_list
-from loss.get_loss import get_loss, cal_loss
 from loss.lscloss import *
 import loss.smoothness
 from loss.StructureConsistency import SaliencyStructureConsistency
@@ -52,8 +51,13 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, loss_fun):
                 sal_prob = torch.sigmoid(pre) * masks
                 smoothLoss = 0.3 * smooth_loss(torch.sigmoid(pre), grays)
                 sal_loss = sal_loss + ratio * CE(sal_prob, gts * masks) + smoothLoss
+            
+            images_trans, sal_list_trans = scale_trans(images, [ref_pre[-1]])
+            ref_trans_pre = generator(images_trans)
+            # import pdb; pdb.set_trace()
+            cycle_loss = SaliencyStructureConsistency(torch.sigmoid(ref_trans_pre[-1]), torch.sigmoid(sal_list_trans[-1]))
 
-            loss = (weight_lsc * loss_lsc_sal + sal_loss) / len(ref_pre)
+            loss = (weight_lsc * loss_lsc_sal + sal_loss) / len(ref_pre) + cycle_loss
             loss.backward()
             generator_optimizer.step()
 

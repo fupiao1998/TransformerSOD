@@ -6,7 +6,7 @@ from torchvision import transforms
 import pandas as pd
 import numpy as np
 import pdb, os, argparse
-from data import test_dataset, eval_Dataset
+from dataset.dataloader import test_dataset, eval_Dataset
 from tqdm import tqdm
 # from model.DPT import DPTSegmentationModel
 from config import param as option

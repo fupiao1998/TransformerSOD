@@ -8,9 +8,11 @@ def scale_trans(image, sal_list, scale_rate=0.5):
     scale_shape = image.shape[-1]*scale_rate
     scale_shape_corr = int(round(scale_shape / 32) * 32)
     images_scale = F.upsample(image, size=(scale_shape_corr, scale_shape_corr), mode='bilinear', align_corners=True)
+    images_scale = F.upsample(images_scale, size=(image.shape[-1], image.shape[-1]), mode='bilinear', align_corners=True)
     sal_list_out = []
     for sal_img in sal_list:
         sal_img_out = F.upsample(sal_img, size=(scale_shape_corr, scale_shape_corr), mode='bilinear', align_corners=True)
+        sal_img_out = F.upsample(sal_img_out, size=(image.shape[-1], image.shape[-1]), mode='bilinear', align_corners=True)
         sal_list_out.append(sal_img_out)
     return images_scale, sal_list_out
 

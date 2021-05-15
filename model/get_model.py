@@ -29,7 +29,7 @@ def get_model(option):
     elif model_name == 'CrossFusion':
         model = CrossFusionSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
     elif model_name == 'swin':
-        model = Swin(option['trainsize']).cuda()
+        model = Swin(option['trainsize'], use_attention=option['use_attention'], pretrain=option['pretrain']).cuda()
     else:
         print("[ERROR]: No model named {}, please attention!!".format(model_name))
         exit()
