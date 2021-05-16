@@ -250,6 +250,7 @@ class Swin_rcab(torch.nn.Module):
         self.layer7 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
         self.layer8 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
         self.layer9 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 1)
+        self.conv_depth = BasicConv2d(6, 3, kernel_size=3, padding=1)
 
     def _make_pred_layer(self, block, dilation_series, padding_series, NoLabels, input_channel):
         return block(dilation_series, padding_series, NoLabels, input_channel)
@@ -286,7 +287,7 @@ class Swin_rcab(torch.nn.Module):
         feat_cat = self.racb_5(feat_cat)
         output5 = self.upsample4(self.layer5(feat_cat))
 
-        return [output5, output4, output3, output2, output1]
+        return [output1, output2, output3, output4, output5]
 
 
 class Swin_rgbd(torch.nn.Module):
