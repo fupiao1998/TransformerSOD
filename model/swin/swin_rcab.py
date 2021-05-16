@@ -40,6 +40,25 @@ class CALayer(nn.Module):
         return x * y
 
 
+class ECALayer(nn.Module):
+    def __init__(self, channel, k_size):
+        super(ECALayer, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.k_size = k_size
+        self.conv = nn.Conv1d(channel, channel, kernel_size=k_size, bias=False, groups=channel)
+        self.sigmoid = nn.Sigmoid()
+
+
+    def forward(self, x):
+        b, c, _, _ = x.size()
+        y = self.avg_pool(x)
+        y = nn.functional.unfold(y.transpose(-1, -3), kernel_size=(1, self.k_size), padding=(0, (self.k_size - 1) // 2))
+        y = self.conv(y.transpose(-1, -2)).unsqueeze(-1)
+        y = self.sigmoid(y)
+        x = x * y.expand_as(x)
+        return x
+
+
 ## Residual Channel Attention Block (RCAB)
 class RCAB(nn.Module):
     # paper: Image Super-Resolution Using Very DeepResidual Channel Attention Networks
@@ -250,7 +269,7 @@ class Swin_rcab(torch.nn.Module):
         self.layer7 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
         self.layer8 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
         self.layer9 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 1)
-        self.conv_depth = BasicConv2d(6, 3, kernel_size=3, padding=1)
+        self.conv_depth = BasicConv2d(4, 3, kernel_size=3, padding=1)
 
     def _make_pred_layer(self, block, dilation_series, padding_series, NoLabels, input_channel):
         return block(dilation_series, padding_series, NoLabels, input_channel)
@@ -288,104 +307,3 @@ class Swin_rcab(torch.nn.Module):
         output5 = self.upsample4(self.layer5(feat_cat))
 
         return [output1, output2, output3, output4, output5]
-
-
-class Swin_rgbd(torch.nn.Module):
-    def __init__(self, img_size):
-        super(Swin_rgbd, self).__init__()
-
-        self.encoder = SwinTransformer(img_size=img_size,
-                                       embed_dim=128,
-                                       depths=[2, 2, 18, 2],
-                                       num_heads=[4, 8, 16, 32],
-                                       window_size=12)
-        pretrained_dict = torch.load(
-            '/home/jingzhang/jing_files/swin-transformer/22kmodels/swin_base_patch4_window12_384_22k.pth')[
-            "model"]
-        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in self.encoder.state_dict()}
-        self.encoder.load_state_dict(pretrained_dict)
-        self.upsample32 = nn.Upsample(scale_factor=32, mode='bilinear', align_corners=True)
-        self.upsample16 = nn.Upsample(scale_factor=16, mode='bilinear', align_corners=True)
-        self.upsample8 = nn.Upsample(scale_factor=8, mode='bilinear', align_corners=True)
-        self.upsample4 = nn.Upsample(scale_factor=4, mode='bilinear', align_corners=True)
-        self.upsample2 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-        self.conv5 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], 256, 1024*2)
-        self.conv4 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], 256, 1024*2)
-        self.conv3 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], 256, 512*2)
-        self.conv2 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], 256, 256*2)
-        self.conv1 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], 256, 128*2)
-
-        # self.decoder = DepthDecoder()
-        self.racb_5 = RCAB(256 * 5)
-        self.racb_4 = RCAB(256 * 4)
-        self.racb_3 = RCAB(256 * 3)
-        self.racb_2 = RCAB(256 * 2)
-        self.racb_1 = RCAB(256 * 1)
-        self.layer5 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 5)
-        self.layer6 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 4)
-        self.layer7 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 3)
-        self.layer8 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
-        self.layer9 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 1)
-
-        # self.edge_layer = Edge_Module()
-        # self.aspp = _AtrousSpatialPyramidPoolingModule(256, 32, output_stride=16)
-        # self.fuse_canny_edge = nn.Conv2d(2, 1, kernel_size=1, padding=0, bias=False)
-        # self.aspp2s4 = nn.Conv2d(192, 256, kernel_size=1, padding=0, bias=False)
-        # self.conv_depth = BasicConv2d(6, 3, kernel_size=3, padding=1)
-
-    def _make_pred_layer(self, block, dilation_series, padding_series, NoLabels, input_channel):
-        return block(dilation_series, padding_series, NoLabels, input_channel)
-
-    def forward(self, x, depth):
-        # raw_x = x
-        # x_size = x.size()
-        features_rgb = self.encoder(x)
-        features_depth = self.encoder(depth)
-
-        x1_rgb = features_rgb[-5]
-        x2_rgb = features_rgb[-4]
-        x3_rgb = features_rgb[-3]
-        x4_rgb = features_rgb[-2]
-        x5_rgb = features_rgb[-1]
-
-        x1_depth = features_depth[-5]
-        x2_depth = features_depth[-4]
-        x3_depth = features_depth[-3]
-        x4_depth = features_depth[-2]
-        x5_depth = features_depth[-1]
-
-        x1 = torch.cat((x1_rgb,x1_depth),1)
-        x2 = torch.cat((x2_rgb, x2_depth), 1)
-        x3 = torch.cat((x3_rgb, x3_depth), 1)
-        x4 = torch.cat((x4_rgb, x4_depth), 1)
-        x5 = torch.cat((x5_rgb, x5_depth), 1)
-
-        x1 = self.conv1(x1)
-        x2 = self.conv2(x2)
-        x3 = self.conv3(x3)
-        x4 = self.conv4(x4)
-        x5 = self.conv5(x5)
-
-        feat_cat = torch.cat(
-            (x1, self.upsample2(x2), self.upsample4(x3), self.upsample8(x4), self.upsample8(x5)), 1)
-        feat_cat = self.racb_5(feat_cat)
-        output5 = self.upsample4(self.layer5(feat_cat))  # (b, 1, 44, 44)
-
-        feat_cat = torch.cat((x2, self.upsample2(x3), self.upsample4(x4), self.upsample4(x5)), 1)
-        feat_cat = self.racb_4(feat_cat)
-        output4 = self.upsample8(self.layer6(feat_cat))  # (b, 1, 44, 44)
-
-        feat_cat = torch.cat((x3, self.upsample2(x4), self.upsample2(x5)), 1)
-        feat_cat = self.racb_3(feat_cat)
-        output3 = self.upsample16(self.layer7(feat_cat))  # (b, 1, 44, 44)
-
-        feat_cat = torch.cat((x4, x5), 1)
-        feat_cat = self.racb_2(feat_cat)
-        output2 = self.upsample32(self.layer8(feat_cat))  # (b, 1, 44, 44)
-
-        output1 = self.upsample32(self.layer9(x5))  # (b, 1, 44, 44)
-
-        # List: [8, 128, 96, 96], [8, 256, 48, 48], [8, 512, 24, 24], [8, 1024, 12, 12], [8, 1024, 12, 12]
-        # outputs = self.decoder(features)
-
-        return [output5], [output4], [output3], [output2], [output1]
