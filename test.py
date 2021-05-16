@@ -6,7 +6,7 @@ from torchvision import transforms
 import pandas as pd
 import numpy as np
 import pdb, os, argparse
-from dataset.dataloader import test_dataset, eval_Dataset
+from dataset.dataloader import test_dataset, eval_Dataset, test_dataset_rgbd
 from tqdm import tqdm
 # from model.DPT import DPTSegmentationModel
 from config import param as option
@@ -46,23 +46,36 @@ for dataset in test_datasets:
     print('[INFO]: Save_path is', save_path)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
+
     image_root = ''
     if option['task'] == 'COD':
         image_root = option['test_dataset_root'] + dataset + '/Imgs/'
+        test_loader = test_dataset(image_root, option['testsize'])
     elif option['task'] == 'SOD':
         image_root = option['test_dataset_root'] + '/Imgs/' + dataset + '/'
+        test_loader = test_dataset(image_root, option['testsize'])
     elif option['task'] == 'Weak-RGB-SOD':
         image_root = option['test_dataset_root'] + '/Imgs/' + dataset + '/'
-    elif option['task'] == 'FIXCOD':
-        image_root = option['test_dataset_root']
+        test_loader = test_dataset(image_root, option['testsize'])
+    elif option['task'] == 'RGBD-SOD':
+        image_root = option['test_dataset_root'] + dataset + '/RGB/'
+        depth_root = option['test_dataset_root'] + dataset + '/depth/'
+        test_loader = test_dataset_rgbd(image_root, depth_root, option['testsize'])
 
-    test_loader = test_dataset(image_root, option['testsize'])
     for i in tqdm(range(test_loader.size), desc=dataset):
-        image, HH, WW, name = test_loader.load_data()
-        image = image.cuda()
-        torch.cuda.synchronize()
-        start = time.time()
-        res = generator.forward(image)
+        if option['task'] == 'SOD' or option['task'] == 'Weak-RGB-SOD':
+            image, HH, WW, name = test_loader.load_data()
+            image = image.cuda()
+            torch.cuda.synchronize()
+            start = time.time()
+            res = generator.forward(image)
+        elif option['task'] == 'RGBD-SOD':
+            image, depth, HH, WW, name = test_loader.load_data()
+            image, depth = image.cuda(), depth.cuda()
+            torch.cuda.synchronize()
+            start = time.time()
+            res = generator.forward(image, depth)
+
         res = res[-1]   # Inference and get the last one of the output list
         res = F.upsample(res, size=[WW, HH], mode='bilinear', align_corners=False)
         res = res.sigmoid().data.cpu().numpy().squeeze()
@@ -76,7 +89,7 @@ for dataset in test_datasets:
 # Begin to evaluate the saved masks
 print('========== Begin to evaluate the saved masks ==========')
 for dataset in tqdm(test_datasets):
-    if option['task'] == 'COD':
+    if option['task'] == 'RGBD-SOD':
         gt_root = option['test_dataset_root'] + dataset + '/GT'
     else:
         gt_root = option['test_dataset_root'] + '/GT/' + dataset + '/'

@@ -5,6 +5,7 @@ from model.ResNet.ResNet_models import ResNet_Baseline
 from model.Fusion.LateFusionNet import LateFusionSegmentationModel
 from model.Fusion.CrossFusionNet import CrossFusionSegmentationModel
 from model.swin.swin import Swin
+from model.swin.swin_rcab import Swin_rcab
 from model.swin.swin import FCDiscriminator
 
 
@@ -21,15 +22,17 @@ def get_model(option):
     elif model_name == 'DPTDS':
         model = DPTSegmentationModelDS(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
     elif model_name == 'ResNet':
-        model = ResNet_Baseline(use_pretrain=option['use_pretrain'])
+        model = ResNet_Baseline(use_pretrain=True).cuda()
     elif model_name == 'VGG':
-        model = VGG_Baseline()
+        model = VGG_Baseline().cuda()
     elif model_name == 'LateFusion':
         model = LateFusionSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
     elif model_name == 'CrossFusion':
         model = CrossFusionSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
     elif model_name == 'swin':
         model = Swin(option['trainsize'], use_attention=option['use_attention'], pretrain=option['pretrain']).cuda()
+    elif model_name == 'swin_rcab':
+        model = Swin_rcab(option['trainsize'], pretrain=option['pretrain']).cuda()
     else:
         print("[ERROR]: No model named {}, please attention!!".format(model_name))
         exit()

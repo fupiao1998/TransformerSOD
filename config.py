@@ -6,7 +6,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Decide Which Task to Training')
 parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'RGBD-SOD', 'Weak-RGB-SOD'])
 parser.add_argument('--model', type=str, default='LateFusion', 
-                    choices=['DPT', 'VGG', 'ResNet', 'LateFusion', 'CrossFusion', 'DPTDS', 'swin'])
+                    choices=['DPT', 'VGG', 'ResNet', 'LateFusion', 'CrossFusion', 'DPTDS', 'swin', 'swin_rcab'])
 parser.add_argument('--training_path', type=str, default='/home1/datasets/SOD_COD/DUTS/')
 parser.add_argument('--log_info', type=str, default='REMOVE')
 parser.add_argument('--ckpt', type=str, default='COD')
@@ -20,7 +20,7 @@ param['task'] = args.task
 # Training Config
 param['epoch'] = 50           # 训练轮数
 param['seed'] = 1234          # 随机种子 
-param['batch_size'] = 4       # 批大小
+param['batch_size'] = 8       # 批大小
 param['save_epoch'] = 5       # 每隔多少轮保存一次模型
 param['lr'] = 2.5e-5          # 学习率
 param['lr_dis'] = 1e-5        # learning rate
@@ -30,7 +30,7 @@ param['decay_rate'] = 0.5
 param['decay_epoch'] = 20
 param['beta'] = [0.5, 0.999]  # Adam参数
 param['size_rates'] = [1]     # 多尺度训练  [0.75, 1, 1.25]/[1]
-param['pretrain'] = "model/swin/swin_base_patch4_window12_384.pth"
+param['pretrain'] = "model/swin/swin_base_patch4_window12_384_22k.pth"
 param['confiednce_learning'] = args.confiednce_learning
 
 
@@ -85,5 +85,5 @@ elif param['task'] == 'SOD':
     param['datasets'] = ['DUTS', 'ECSSD', 'DUT', 'HKU-IS', 'PASCAL', 'SOD']  # , 'THUR', 'HKU-IS', 'MSRA-B', 'PASCAL', 'ECSSD', 'DUT', 'DUTS'
 elif param['task'] == 'Weak-RGB-SOD':
     param['datasets'] = ['DUTS', 'ECSSD', 'DUT', 'HKU-IS', 'PASCAL', 'SOD']
-elif param['task'] == 'FIXCOD':
-    param['datasets'] = ['FIXCOD_Baseline_30']
+elif param['task'] == 'RGBD-SOD':
+    param['datasets'] = ['NJU2K', 'STERE', 'DES', 'NLPR', 'LFSD', 'SIP']

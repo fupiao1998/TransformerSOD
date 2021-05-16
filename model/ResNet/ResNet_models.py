@@ -1,3 +1,5 @@
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 import torchvision.models as models
@@ -158,6 +160,16 @@ class RCAB(nn.Module):
         res += x
         return res
 
+
+def vis_feat(x, features, img_num, i):
+    # img_num=0;vis_feat(x_raw, features, img_num, 0);vis_feat(x_raw, features, img_num, 1);vis_feat(x_raw, features, img_num, 2);vis_feat(x_raw, features, img_num, 3);vis_feat(x, features, img_num, 4)
+    feat_mean = features[i][0].squeeze().mean(0)
+    feat = ((feat_mean-feat_mean.min())/(feat_mean.max()-feat_mean.min())).squeeze().detach().cpu().numpy()*255
+    feat = cv2.resize(feat, (x.shape[-1]//4, x.shape[-2]//4), interpolation=cv2.INTER_NEAREST)
+    im_color =  cv2.applyColorMap(np.array(feat, np.uint8), cv2.COLORMAP_JET)
+    cv2.imwrite('vis/vis_resnet_train/'+str(img_num)+'_'+str(i)+'.png', im_color)
+
+
 class ResNet_Baseline(nn.Module):
     # resnet based encoder decoder
     def __init__(self, channel=256, use_pretrain=True):
@@ -174,6 +186,7 @@ class ResNet_Baseline(nn.Module):
         self.racb_4321 = RCAB(channel * 4)
         self.layer5 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, channel * 4)
         self.use_pretrain = use_pretrain
+        self.num = 0
 
         if self.training:
             self.initialize_weights()
@@ -182,6 +195,7 @@ class ResNet_Baseline(nn.Module):
         return block(dilation_series, padding_series, NoLabels, input_channel)
 
     def forward(self, x):
+        x_raw = x
         x = self.resnet.conv1(x)
         x = self.resnet.bn1(x)
         x = self.resnet.relu(x)
@@ -196,6 +210,10 @@ class ResNet_Baseline(nn.Module):
         conv2_feat = self.conv2(x2)
         conv3_feat = self.conv3(x3_1)
         conv4_feat = self.conv4(x4_1)
+        features = [conv1_feat, conv2_feat, conv3_feat, conv4_feat]
+        vis_feat(x_raw, features, self.num, 0);vis_feat(x_raw, features, self.num, 1);vis_feat(x_raw, features, self.num, 2);vis_feat(x_raw, features, self.num, 3)
+        self.num = self.num+1
+        # import pdb; pdb.set_trace()
         
         feat_cat = torch.cat((conv1_feat,self.upsample2(conv2_feat),self.upsample4(conv3_feat),self.upsample8(conv4_feat)),1)
         feat_cat = self.racb_4321(feat_cat)

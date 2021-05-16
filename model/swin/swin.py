@@ -7,13 +7,13 @@ import numpy as np
 import cv2
 
 
-def vis_feat(x, features, i):
-    # vis_feat(x, features, 0);vis_feat(x, features, 1);vis_feat(x, features, 2);vis_feat(x, features, 3);vis_feat(x, features, 4)
+def vis_feat(x, features, img_num, i):
+    # img_num=0;vis_feat(x, features, img_num, 0);vis_feat(x, features, img_num, 1);vis_feat(x, features, img_num, 2);vis_feat(x, features, img_num, 3);vis_feat(x, features, img_num, 4)
     feat_mean = features[i][0].squeeze().mean(0)
     feat = ((feat_mean-feat_mean.min())/(feat_mean.max()-feat_mean.min())).squeeze().detach().cpu().numpy()*255
-    feat = cv2.resize(feat, (x.shape[-1], x.shape[-2]), interpolation=cv2.INTER_NEAREST)
+    feat = cv2.resize(feat, (x.shape[-1]//4, x.shape[-2]//4), interpolation=cv2.INTER_NEAREST)
     im_color =  cv2.applyColorMap(np.array(feat, np.uint8), cv2.COLORMAP_JET)
-    cv2.imwrite(str(i)+'.png', im_color)
+    cv2.imwrite('vis/vis_swin_pretrain/'+str(img_num)+'_'+str(i)+'.png', im_color)
 
 
 class BasicConv2d(nn.Module):
@@ -49,16 +49,19 @@ class Swin(torch.nn.Module):
         self.decoder = Decoder(use_multi_scale=True, use_attention=use_attention)
         self.conv_depth = BasicConv2d(6, 3, kernel_size=3, padding=1)
         # self.decoder = DSSDecoder()
+        # self.num = 0
 
     def forward(self, x, depth=None):
         if depth is not None:
             x = torch.cat((x, depth), 1)
             x = self.conv_depth(x)
         features = self.encoder(x)
+        # vis_feat(x, features, self.num, 0);vis_feat(x, features, self.num, 1);vis_feat(x, features, self.num, 2);vis_feat(x, features, self.num, 3);vis_feat(x, features, self.num, 4)
         # import pdb; pdb.set_trace()
         # List: [8, 128, 96, 96], [8, 256, 48, 48], [8, 512, 24, 24], [8, 1024, 12, 12], [8, 1024, 12, 12]
         outputs = self.decoder(features)
         # import pdb; pdb.set_trace()
+        # self.num = self.num+1
 
         return outputs
 
