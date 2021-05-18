@@ -250,10 +250,11 @@ def ssim( pred, gt):
 
 parser = argparse.ArgumentParser(description='Decide Which Task to Training')
 parser.add_argument('--save_dir', type=str, default=None)
+parser.add_argument('--task', type=str, default='SOD')
 args = parser.parse_args()
 
 
-task = "SOD"
+task = args.task
 if task == "SOD":
     gt_dir = "/home1/datasets/SOD_COD/SOD_RGB/"
     test_datasets = ['DUTS', 'ECSSD', 'DUT', 'HKU-IS', 'PASCAL', 'SOD'] # ['DUTS', 'ECSSD', 'DUT', 'HKU-IS', 'THUR', 'SOC']
@@ -261,17 +262,20 @@ elif task == "COD":
     gt_dir = "/data/maoyuxin/datasets/COD_datasets/COD_test/"
     test_datasets = ['CAMO', 'CHAMELEON', 'COD10K', 'NC4K']
 elif task == "RGBD-SOD":
-    gt_dir = "/data/maoyuxin/codes/COD/rgbd_sod/dataset/test/"
-    test_datasets = ['NJU2K', 'DES', 'NLPR', 'LFSD', 'SIP', 'STERE']
+    gt_dir = "/home1/datasets/SOD_COD/RGBD_SOD/test/"
+    test_datasets = ['NJU2K', 'STERE', 'DES', 'NLPR', 'LFSD', 'SIP']
 pred_dir = args.save_dir
-print(pred_dir)
+print('[INFO]: Process Task [{}] in Path [{}]'.format(task, pred_dir))
 
 latex_str = ""
 results_list = []
 columns_pd = ['S_measure', 'F_measure', 'E_measure', 'MAE']
 for dataset in test_datasets:
     print("[INFO]: Process {} dataset".format(dataset))
-    loader = eval_Dataset(osp.join(pred_dir, dataset), osp.join(gt_dir, 'GT', dataset))
+    if task == "SOD":
+        loader = eval_Dataset(osp.join(pred_dir, dataset), osp.join(gt_dir, 'GT', dataset))
+    elif task == "RGBD-SOD":
+        loader = eval_Dataset(osp.join(pred_dir, dataset), osp.join(gt_dir, dataset, 'GT'))
     S_measure = Eval_Smeasure(loader=loader, cuda=True)
     F_measure = Eval_fmeasure(loader=loader, cuda=True)
     E_measure = Eval_Emeasure(loader=loader, cuda=True)

@@ -241,6 +241,7 @@ class Swin_rcab(torch.nn.Module):
                                        depths=[2,2,18,2],
                                        num_heads=[4,8,16,32],
                                        window_size=12)
+        print('[INFO]: Load Pre-Train Model [{}]'.format(pretrain))
         pretrained_dict = torch.load(pretrain)["model"]
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in self.encoder.state_dict()}
         self.encoder.load_state_dict(pretrained_dict)
@@ -260,16 +261,25 @@ class Swin_rcab(torch.nn.Module):
         self.conv_reformat_3 = BasicConv2d(in_planes=512, out_planes=256, kernel_size=1)
         self.conv_reformat_4 = BasicConv2d(in_planes=512, out_planes=256, kernel_size=1)
         
-        self.racb_5 = RCAB(256 * 2)
-        self.racb_4 = RCAB(256 * 2)
-        self.racb_3 = RCAB(256 * 2)
-        self.racb_2 = RCAB(256 * 2)
+        self.racb_5, self.racb_4 = RCAB(256 * 2), RCAB(256 * 2)
+        self.racb_3, self.racb_2 = RCAB(256 * 2), RCAB(256 * 2)
+
         self.layer5 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
         self.layer6 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
         self.layer7 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
         self.layer8 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
         self.layer9 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 1)
-        self.conv_depth = BasicConv2d(4, 3, kernel_size=3, padding=1)
+        self.conv_depth = BasicConv2d(6, 3, kernel_size=3, padding=1)
+        # self.conv_fuse_x1 = nn.Conv2d(5, 64, (1,5), padding=(0,2))
+        # self.conv_fuse_x2 = nn.Conv2d(64, 64, (1,5), padding=(0,2))
+        # self.conv_fuse_y1 = nn.Conv2d(64, 64, (5,1), padding=(2,0))
+        # self.conv_fuse_y2 = nn.Conv2d(64, 1, (5,1), padding=(2,0))
+
+        # self.conv_fuse_x1 = nn.Conv2d(5, 64, (1,7), padding=(0,3))
+        # self.conv_fuse_x2 = nn.Conv2d(64, 64, (1,7), padding=(0,3))
+        # self.conv_fuse_y1 = nn.Conv2d(64, 64, (7,1), padding=(3,0))
+        # self.conv_fuse_y2 = nn.Conv2d(64, 64, (7,1), padding=(3,0))
+        # self.conv_fuse_out = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 64)
 
     def _make_pred_layer(self, block, dilation_series, padding_series, NoLabels, input_channel):
         return block(dilation_series, padding_series, NoLabels, input_channel)
@@ -282,7 +292,6 @@ class Swin_rcab(torch.nn.Module):
 
         x1, x2, x3, x4, x5 = features[-5], features[-4], features[-3], features[-2], features[-1]
         # [8, 128, 96, 96], [8, 256, 48, 48], [8, 512, 24, 24], [8, 1024, 12, 12], [8, 1024, 12, 12]
-
         x1, x2, x3, x4, x5 = self.conv1(x1), self.conv2(x2), self.conv3(x3), self.conv4(x4), self.conv5(x5)
 
         output1 = self.upsample32(self.layer9(x5))
@@ -305,5 +314,10 @@ class Swin_rcab(torch.nn.Module):
         feat_cat = torch.cat((x1, self.upsample2(feat4)), 1)
         feat_cat = self.racb_5(feat_cat)
         output5 = self.upsample4(self.layer5(feat_cat))
+        # import pdb;pdb.set_trace()
+        # out_cat = torch.cat((output1, output2, output3, output4, output5), 1)
+        # output6 = self.conv_fuse_y1(self.conv_fuse_x1(out_cat))
+        # output6 = self.conv_fuse_y2(self.conv_fuse_x2(output6))
+        # output6 = self.conv_fuse_out(output6)
 
         return [output1, output2, output3, output4, output5]
