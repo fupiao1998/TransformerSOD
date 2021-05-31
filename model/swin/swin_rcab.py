@@ -242,6 +242,7 @@ class Swin_rcab(torch.nn.Module):
                                        num_heads=[4,8,16,32],
                                        window_size=12)
         print('[INFO]: Load Pre-Train Model [{}]'.format(pretrain))
+        self.channel_size = 64
         pretrained_dict = torch.load(pretrain)["model"]
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in self.encoder.state_dict()}
         self.encoder.load_state_dict(pretrained_dict)
@@ -251,25 +252,29 @@ class Swin_rcab(torch.nn.Module):
         self.upsample4 = nn.Upsample(scale_factor=4, mode='bilinear', align_corners=True)
         self.upsample2 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
-        self.conv5 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], 256, 1024)
-        self.conv4 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], 256, 1024)
-        self.conv3 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], 256, 512)
-        self.conv2 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], 256, 256)
-        self.conv1 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], 256, 128)
+        self.conv5 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], self.channel_size, 1024)
+        self.conv4 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], self.channel_size, 1024)
+        self.conv3 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], self.channel_size, 512)
+        self.conv2 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], self.channel_size, 256)
+        self.conv1 = self._make_pred_layer(Classifier_Module, [3, 6, 12, 18], [3, 6, 12, 18], self.channel_size, 128)
 
-        self.conv_reformat_2 = BasicConv2d(in_planes=512, out_planes=256, kernel_size=1)
-        self.conv_reformat_3 = BasicConv2d(in_planes=512, out_planes=256, kernel_size=1)
-        self.conv_reformat_4 = BasicConv2d(in_planes=512, out_planes=256, kernel_size=1)
+        self.conv_reformat_2 = BasicConv2d(in_planes=self.channel_size*2, out_planes=self.channel_size, kernel_size=1)
+        self.conv_reformat_3 = BasicConv2d(in_planes=self.channel_size*2, out_planes=self.channel_size, kernel_size=1)
+        self.conv_reformat_4 = BasicConv2d(in_planes=self.channel_size*2, out_planes=self.channel_size, kernel_size=1)
         
-        self.racb_5, self.racb_4 = RCAB(256 * 2), RCAB(256 * 2)
-        self.racb_3, self.racb_2 = RCAB(256 * 2), RCAB(256 * 2)
+        self.racb_5, self.racb_4 = RCAB(self.channel_size*2), RCAB(self.channel_size*2)
+        self.racb_3, self.racb_2 = RCAB(self.channel_size*2), RCAB(self.channel_size*2)
+        """
+        self.racb_5, self.racb_4 = ECALayer(256 * 2, 3), ECALayer(256 * 2, 3)
+        self.racb_3, self.racb_2 = ECALayer(256 * 2, 3), ECALayer(256 * 2, 3)
+        """
 
-        self.layer5 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
-        self.layer6 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
-        self.layer7 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
-        self.layer8 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 2)
-        self.layer9 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, 256 * 1)
-        self.conv_depth = BasicConv2d(6, 3, kernel_size=3, padding=1)
+        self.layer5 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, self.channel_size*2)
+        self.layer6 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, self.channel_size*2)
+        self.layer7 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, self.channel_size*2)
+        self.layer8 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, self.channel_size*2)
+        self.layer9 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, self.channel_size * 1)
+        # self.conv_depth = BasicConv2d(6, 3, kernel_size=3, padding=1)
         # self.conv_fuse_x1 = nn.Conv2d(5, 64, (1,5), padding=(0,2))
         # self.conv_fuse_x2 = nn.Conv2d(64, 64, (1,5), padding=(0,2))
         # self.conv_fuse_y1 = nn.Conv2d(64, 64, (5,1), padding=(2,0))

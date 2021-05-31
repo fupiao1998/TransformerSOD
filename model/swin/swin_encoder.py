@@ -135,12 +135,13 @@ class WindowAttention(nn.Module):
             attn = self.softmax(attn)
         else:
             attn = self.softmax(attn)
-
+        # import pdb; pdb.set_trace()
         attn = self.attn_drop(attn)
 
         x = (attn @ v).transpose(1, 2).reshape(B_, N, C)
         x = self.proj(x)
         x = self.proj_drop(x)
+        # import pdb; pdb.set_trace()
         return x
 
     def extra_repr(self) -> str:
@@ -255,6 +256,7 @@ class SwinTransformerBlock(nn.Module):
         # merge windows
         attn_windows = attn_windows.view(-1, self.window_size, self.window_size, C)
         shifted_x = window_reverse(attn_windows, self.window_size, H, W)  # B H' W' C
+        # import pdb; pdb.set_trace()
 
         # reverse cyclic shift
         if self.shift_size > 0:

@@ -39,6 +39,9 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, loss_fun):
             ref_pre = generator(images)
             # Optimize generator
             supervised_loss = cal_loss(ref_pre, gts, loss_fun)
+            # images_trans, sal_list_trans = rot_trans(images, [ref_pre[-1]])
+            # ref_trans_pre = generator(images_trans)
+            cycle_loss = 0#SaliencyStructureConsistency(torch.sigmoid(ref_trans_pre[-1]), torch.sigmoid(sal_list_trans[-1]))
             
             # Optimize discriminator
             dis_loss, diff_loss, Dis_output_list = 0, 0, list()
@@ -61,7 +64,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, loss_fun):
                 diff_loss_curr = cal_loss(pre, gts, loss_fun, torch.sigmoid(dis_out))
                 diff_loss = diff_loss_curr + diff_loss
             diff_loss = diff_loss/len(ref_pre)
-            supervised_loss_with_diff = (supervised_loss + diff_loss) / 2
+            supervised_loss_with_diff = (supervised_loss + diff_loss) / 2 + cycle_loss
             supervised_loss_with_diff.backward()
             generator_optimizer.step()
 

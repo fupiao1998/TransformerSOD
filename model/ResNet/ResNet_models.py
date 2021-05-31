@@ -167,7 +167,7 @@ def vis_feat(x, features, img_num, i):
     feat = ((feat_mean-feat_mean.min())/(feat_mean.max()-feat_mean.min())).squeeze().detach().cpu().numpy()*255
     feat = cv2.resize(feat, (x.shape[-1]//4, x.shape[-2]//4), interpolation=cv2.INTER_NEAREST)
     im_color =  cv2.applyColorMap(np.array(feat, np.uint8), cv2.COLORMAP_JET)
-    cv2.imwrite('vis/vis_resnet_train/'+str(img_num)+'_'+str(i)+'.png', im_color)
+    cv2.imwrite('vis/vis_resnet_pretrain/'+str(img_num)+'_'+str(i)+'.png', im_color)
 
 
 class ResNet_Baseline(nn.Module):

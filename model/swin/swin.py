@@ -49,7 +49,7 @@ class Swin(torch.nn.Module):
         self.decoder = Decoder(use_multi_scale=True, use_attention=use_attention)
         self.conv_depth = BasicConv2d(6, 3, kernel_size=3, padding=1)
         # self.decoder = DSSDecoder()
-        # self.num = 0
+        self.num = 0
 
     def forward(self, x, depth=None):
         if depth is not None:
