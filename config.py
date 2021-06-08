@@ -9,7 +9,7 @@ parser.add_argument('--model', type=str, default='LateFusion',
                     choices=['DPT', 'VGG', 'ResNet', 'LateFusion', 'CrossFusion', 'DPTDS', 'swin', 'swin_rcab', 'swin_rcab_cross'])
 parser.add_argument('--training_path', type=str, default='/home1/datasets/SOD_COD/DUTS/')
 parser.add_argument('--log_info', type=str, default='REMOVE')
-parser.add_argument('--ckpt', type=str, default='COD')
+parser.add_argument('--ckpt', type=str, default=None)
 parser.add_argument('--confiednce_learning', action='store_true')
 parser.add_argument('--use_22k', action='store_true')
 args = parser.parse_args()

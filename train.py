@@ -1,17 +1,10 @@
 import os
-import cv2
-import time
 import torch
-import torch.nn.functional as F
-import torchvision.transforms as transforms
-from tqdm import tqdm
 from dataset.get_loader import get_loader
 from config import param as option
-from torch.autograd import Variable
-from torch.optim import lr_scheduler
-from utils import AvgMeter, set_seed, visualize_all
+from utils import set_seed
 from model.get_model import get_model
-from loss.get_loss import get_loss, cal_loss
+from loss.get_loss import get_loss
 from optim.get_optim import get_optim, get_optim_dis
 from torch.utils.tensorboard import SummaryWriter
 

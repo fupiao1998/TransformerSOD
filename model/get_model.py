@@ -1,3 +1,4 @@
+import torch
 from model.DPT.DPT import DPTSegmentationModel
 from model.DPTDS.DPTDS import DPTSegmentationModelDS
 from model.VGG.vgg_models import VGG_Baseline
@@ -19,7 +20,7 @@ def get_model(option):
         print("[INFO]: No Discriminator, Only training for Generator!")
     model_name = option['model_name']
     if model_name == 'DPT':
-        model = DPTSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain'], use_attention=option['attention_decoder']).cuda()
+        model = DPTSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=True, use_attention=option['attention_decoder']).cuda()
     elif model_name == 'DPTDS':
         model = DPTSegmentationModelDS(1, backbone=option['backbone_name'], use_pretrain=True).cuda()
     elif model_name == 'ResNet':
@@ -27,9 +28,9 @@ def get_model(option):
     elif model_name == 'VGG':
         model = VGG_Baseline().cuda()
     elif model_name == 'LateFusion':
-        model = LateFusionSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
+        model = LateFusionSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=True).cuda()
     elif model_name == 'CrossFusion':
-        model = CrossFusionSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=option['use_pretrain']).cuda()
+        model = CrossFusionSegmentationModel(1, backbone=option['backbone_name'], use_pretrain=True).cuda()
     elif model_name == 'swin':
         model = Swin(option['trainsize'], use_attention=option['use_attention'], pretrain=option['pretrain']).cuda()
     elif model_name == 'swin_rcab':
@@ -40,5 +41,9 @@ def get_model(option):
         print("[ERROR]: No model named {}, please attention!!".format(model_name))
         exit()
     print("[INFO]: Model based on {} have {:.4f}Mb paramerters in total".format(model_name, sum(x.numel()/1e6 for x in model.parameters())))
+
+    if option['checkpoint'] is not None:
+        model.load_state_dict(torch.load(option['checkpoint']))
+        print('Load checkpoint from {}'.format(option['checkpoint']))
 
     return model, dis_model
