@@ -6,7 +6,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Decide Which Task to Training')
 parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'RGBD-SOD', 'Weak-RGB-SOD'])
 parser.add_argument('--model', type=str, default='LateFusion', 
-                    choices=['DPT', 'VGG', 'ResNet', 'LateFusion', 'CrossFusion', 'DPTDS', 'swin', 'swin_rcab'])
+                    choices=['DPT', 'VGG', 'ResNet', 'LateFusion', 'CrossFusion', 'DPTDS', 'swin', 'swin_rcab', 'swin_rcab_cross'])
 parser.add_argument('--training_path', type=str, default='/home1/datasets/SOD_COD/DUTS/')
 parser.add_argument('--log_info', type=str, default='REMOVE')
 parser.add_argument('--ckpt', type=str, default='COD')
@@ -51,9 +51,9 @@ param['backbone_name'] = "vitb_rn50_384"   # vitl16_384
 
 # Dataset Config
 if param['task'] == 'COD':
-    param['image_root'] = '/data/maoyuxin/datasets/COD_datasets/camouflage/COD_train/Imgs/'
-    param['gt_root'] = '/data/maoyuxin/datasets/COD_datasets/camouflage/COD_train/GT/'
-    param['test_dataset_root'] = '/data/maoyuxin/datasets/COD_datasets/COD_test/'
+    param['image_root'] = '/home1/datasets/SOD_COD/COD/camouflage/COD_train/Imgs/'
+    param['gt_root'] = '/home1/datasets/SOD_COD/COD/camouflage/COD_train/GT/'
+    param['test_dataset_root'] = '/home1/datasets/SOD_COD/COD/camouflage/COD_test/COD_test/'
 elif param['task'] == 'SOD':
     param['image_root'] = args.training_path + '/img/'
     param['gt_root'] = args.training_path + '/gt/'

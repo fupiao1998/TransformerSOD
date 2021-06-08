@@ -17,7 +17,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 if option['task'] == 'Weak-RGB-SOD':
     from trainer.weakly_train import train_one_epoch
-elif option['task'] == 'SOD':     
+elif option['task'] == 'SOD' or option['task'] == 'COD' :     
     from trainer.diff_basic_train import train_one_epoch
 elif option['task'] == 'RGBD-SOD':
     from trainer.diff_rgbd_train import train_one_epoch

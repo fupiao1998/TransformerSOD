@@ -59,6 +59,58 @@ class ECALayer(nn.Module):
         return x
 
 
+class ResidualBlock(nn.Module):
+    def __init__(self, in_planes, planes, norm_fn='group', stride=1):
+        super(ResidualBlock, self).__init__()
+  
+        self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=stride)
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1)
+        self.relu = nn.ReLU(inplace=True)
+
+        num_groups = planes // 8
+
+        if norm_fn == 'group':
+            self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
+            self.norm2 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
+            if not stride == 1:
+                self.norm3 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
+        
+        elif norm_fn == 'batch':
+            self.norm1 = nn.BatchNorm2d(planes)
+            self.norm2 = nn.BatchNorm2d(planes)
+            if not stride == 1:
+                self.norm3 = nn.BatchNorm2d(planes)
+        
+        elif norm_fn == 'instance':
+            self.norm1 = nn.InstanceNorm2d(planes)
+            self.norm2 = nn.InstanceNorm2d(planes)
+            if not stride == 1:
+                self.norm3 = nn.InstanceNorm2d(planes)
+
+        elif norm_fn == 'none':
+            self.norm1 = nn.Sequential()
+            self.norm2 = nn.Sequential()
+            if not stride == 1:
+                self.norm3 = nn.Sequential()
+
+        if stride == 1:
+            self.downsample = None
+        
+        else:    
+            self.downsample = nn.Sequential(
+                nn.Conv2d(in_planes, planes, kernel_size=1, stride=stride), self.norm3)
+
+    def forward(self, x):
+        y = x
+        y = self.relu(self.norm1(self.conv1(y)))
+        y = self.relu(self.norm2(self.conv2(y)))
+
+        if self.downsample is not None:
+            x = self.downsample(x)
+
+        return self.relu(x+y)
+
+
 ## Residual Channel Attention Block (RCAB)
 class RCAB(nn.Module):
     # paper: Image Super-Resolution Using Very DeepResidual Channel Attention Networks
@@ -86,6 +138,7 @@ class RCAB(nn.Module):
         #res = self.body(x).mul(self.res_scale)
         res += x
         return res
+
 
 class Edge_Module(nn.Module):
 
@@ -118,6 +171,7 @@ class Edge_Module(nn.Module):
         edge = self.rcab(edge)
         edge = self.classifer(edge)
         return edge
+
 
 class _AtrousSpatialPyramidPoolingModule(nn.Module):
     '''
@@ -186,6 +240,7 @@ class _AtrousSpatialPyramidPoolingModule(nn.Module):
             out = torch.cat((out, y), 1)
         return out
 
+
 class BasicConv2d(nn.Module):
     def __init__(self, in_planes, out_planes, kernel_size, stride=1, padding=0, dilation=1):
         super(BasicConv2d, self).__init__()
@@ -199,6 +254,7 @@ class BasicConv2d(nn.Module):
     def forward(self, x):
         x = self.conv_bn(x)
         return x
+
 
 class FCDiscriminator(nn.Module):
     def __init__(self, ndf):
@@ -232,9 +288,44 @@ class FCDiscriminator(nn.Module):
         return x
 
 
-class Swin_rcab(torch.nn.Module):
+class DRB(nn.Module):
+    """Depth Refinement Block."""
+    def __init__(self, dim=256):
+        """Init.
+
+        Args:
+            features (int): number of features
+        """
+        super(DRB, self).__init__()
+        self.conv_refine1 = nn.Conv2d(dim, dim, 3, padding=1)
+        self.bn_refine1 = nn.BatchNorm2d(dim, eps=1e-05, momentum=0.1, affine=True)
+
+        self.conv_refine2 = nn.Conv2d(dim, dim, 3, padding=1)
+        self.bn_refine2 = nn.BatchNorm2d(dim, eps=1e-05, momentum=0.1, affine=True)
+        self.prelu = nn.PReLU()
+
+        self.conv_fuse = nn.Conv2d(dim, dim, 3, padding=1)
+        self.conv_out = nn.Conv2d(dim, dim, 3, padding=1)
+
+    def forward(self, img_feat, depth_feat):
+        """Forward pass.
+
+        Returns:
+            tensor: output
+        """
+        depth_feat_1 = self.prelu(self.bn_refine1(self.conv_refine1(depth_feat)))
+        depth_feat_2 = self.prelu(self.bn_refine2(self.conv_refine2(depth_feat)))
+
+        fused_feat = img_feat + depth_feat_2
+        fused_feat_skip = self.prelu(self.conv_fuse(fused_feat)) + fused_feat
+        output = self.conv_out(fused_feat_skip)
+
+        return output
+
+
+class Swin_rcab_cross(torch.nn.Module):
     def __init__(self, img_size, pretrain):
-        super(Swin_rcab, self).__init__()
+        super(Swin_rcab_cross, self).__init__()
 
         self.encoder = SwinTransformer(img_size=img_size, 
                                        embed_dim=128,
@@ -242,7 +333,7 @@ class Swin_rcab(torch.nn.Module):
                                        num_heads=[4,8,16,32],
                                        window_size=12)
         print('[INFO]: Load Pre-Train Model [{}]'.format(pretrain))
-        self.channel_size = 256
+        self.channel_size = 128
         pretrained_dict = torch.load(pretrain)["model"]
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in self.encoder.state_dict()}
         self.encoder.load_state_dict(pretrained_dict)
@@ -274,6 +365,21 @@ class Swin_rcab(torch.nn.Module):
         self.layer7 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, self.channel_size*2)
         self.layer8 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, self.channel_size*2)
         self.layer9 = self._make_pred_layer(Classifier_Module, [6, 12, 18, 24], [6, 12, 18, 24], 1, self.channel_size*1)
+
+        self.in_planes = 128
+        self.depth_conv = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1)
+        self.depth_conv1x1 = nn.Conv2d(64, 128, kernel_size=1, stride=1, padding=0)
+        self.depth_relu = nn.ReLU(inplace=True)
+        self.depth_layer1_1 = self._make_layer(128, stride=2)
+        self.depth_layer1_2 = self._make_layer(256, stride=2)
+        self.depth_layer2 = self._make_layer(256, stride=2)  # 1/2
+        self.depth_layer3 = self._make_layer(256, stride=2)  # 1/4
+        self.depth_layer4 = self._make_layer(256, stride=2)  # 1/8
+        self.depth_layer5 = self._make_layer(256, stride=1)  # 1/16
+
+        self.drb1, self.drb2, self.drb3 = DRB(256), DRB(256), DRB(256)
+        self.drb4, self.drb5 = DRB(256), DRB(256)
+
         # self.conv_depth = BasicConv2d(6, 3, kernel_size=3, padding=1)
         # self.conv_fuse_x1 = nn.Conv2d(5, 64, (1,5), padding=(0,2))
         # self.conv_fuse_x2 = nn.Conv2d(64, 64, (1,5), padding=(0,2))
@@ -289,35 +395,53 @@ class Swin_rcab(torch.nn.Module):
     def _make_pred_layer(self, block, dilation_series, padding_series, NoLabels, input_channel):
         return block(dilation_series, padding_series, NoLabels, input_channel)
 
+    def _make_layer(self, dim, stride=1, norm_fn='batch'):
+        layer1 = ResidualBlock(self.in_planes, dim, norm_fn, stride=stride)
+        layer2 = ResidualBlock(dim, dim, norm_fn, stride=1)
+        layers = (layer1, layer2)
+
+        self.in_planes = dim        
+        return nn.Sequential(*layers)
+
     def forward(self, x, depth=None):
-        if depth != None:
-            x = torch.cat((x, depth), 1)
-            x = self.conv_depth(x)
+        # Process depth first
+        depth_feat_0 = self.depth_relu(self.depth_conv(depth))
+        depth_feat_0 = self.depth_relu(self.depth_conv1x1(depth_feat_0))
+        depth_feat_0 = self.depth_layer1_1(depth_feat_0)
+
+        depth_feat_1 = self.depth_layer1_2(depth_feat_0)
+        depth_feat_2 = self.depth_layer2(depth_feat_1)
+        depth_feat_3 = self.depth_layer3(depth_feat_2)
+        depth_feat_4 = self.depth_layer4(depth_feat_3)
+        # depth_feat_5 = self.depth_layer5(depth_feat_4)
+        
         features = self.encoder(x)
 
         x1, x2, x3, x4, x5 = features[-5], features[-4], features[-3], features[-2], features[-1]
         # [8, 128, 96, 96], [8, 256, 48, 48], [8, 512, 24, 24], [8, 1024, 12, 12], [8, 1024, 12, 12]
         x1, x2, x3, x4, x5 = self.conv1(x1), self.conv2(x2), self.conv3(x3), self.conv4(x4), self.conv5(x5)
+        # x1, x2, x3 = self.drb1(x1, depth_feat_1), self.drb2(x2, depth_feat_2), self.drb3(x3, depth_feat_3)
+        # x4, x5 = self.drb4(x4, depth_feat_4), self.drb5(x5, depth_feat_5)
 
         output1 = self.upsample32(self.layer9(x5))
 
         feat_cat = torch.cat((x4, x5), 1)
-        feat_cat = self.racb_2(feat_cat)
+        feat_cat = self.racb_2(self.drb4(feat_cat, depth_feat_4))
         output2 = self.upsample32(self.layer8(feat_cat))
         feat2 = self.conv_reformat_2(feat_cat)
 
         feat_cat = torch.cat((x3, self.upsample2(feat2)), 1)
-        feat_cat = self.racb_3(feat_cat)
+        feat_cat = self.racb_3(self.drb3(feat_cat, depth_feat_3))
         output3 = self.upsample16(self.layer7(feat_cat))
         feat3 = self.conv_reformat_3(feat_cat)
 
         feat_cat = torch.cat((x2, self.upsample2(feat3)), 1)
-        feat_cat = self.racb_4(feat_cat)
+        feat_cat = self.racb_4(self.drb2(feat_cat, depth_feat_2))
         output4 = self.upsample8(self.layer6(feat_cat))
         feat4 = self.conv_reformat_4(feat_cat)
 
         feat_cat = torch.cat((x1, self.upsample2(feat4)), 1)
-        feat_cat = self.racb_5(feat_cat)
+        feat_cat = self.racb_5(self.drb1(feat_cat, depth_feat_1))
         output5 = self.upsample4(self.layer5(feat_cat))
         # import pdb;pdb.set_trace()
         # out_cat = torch.cat((output1, output2, output3, output4, output5), 1)
