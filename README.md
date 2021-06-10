@@ -31,6 +31,12 @@ The saliency maps of  DUTS, ECSSD, DUT, HKU-IS, PASCAL-S, SOD dataset in weakly 
 
 |       | S_measure | F_measure | E_measure | MAE|
 | ------| --------- | --------- | --------- | ---| 
+| DUTS  |  0.54391  |  0.38415  |  0.66060  | 0.18044 |
+| ECSSD |  0.91357  |  0.92026  |  0.95570  | 0.03274 |
+| DUT   |  0.84257  |  0.78210  |  0.88892  | 0.05375 |
+| HKU-IS|  0.46378  |  0.33915  |  0.63025  | 0.24380 |
+| PASCAL|  0.85309  |  0.85142  |  0.90612  | 0.06325 |
+| SOD   |  0.82119  |  0.82575  |  0.87677  | 0.07798 |
 
 The camouflage maps of  CAMO, CHAMELEON, COD10K, NC4K dataset in weakly supervised manner are as: [camouflage maps](https://drive.google.com/file/d/1vonv9MGKamoLQNIw3AgLkZVj1Jh-Db3i/view?usp=sharing)
 
