@@ -1,7 +1,9 @@
 # TrasformerSOD
-Difficulty-aware Salient Object Detection via Deeply-supervised Transformer
-A unified framework for Trasformer supervised/weakly supervised SOD, RGBD SOD, COD
+Difficulty-aware Salient Object Detection via Deeply-supervised Transformer.
 
+A unified framework for Trasformer supervised/weakly supervised SOD, RGBD SOD, COD.
+
+The code will be published after the paper is accepted.
 # Our results
 The saliency maps of DUTS, ECSSD, DUT, HKU-IS, PASCAL-S, SOD dataset in fully supervised manner are as: [saliency maps1](https://drive.google.com/file/d/13yyQwnbxV2iLoAYd3jmOLeF5w_L_uXkl/view?usp=sharing)
 
@@ -24,3 +26,5 @@ The saliency maps of NJU2K,STERE,DES,NLPR,LFSD,SIP dataset in fully supervised m
 | NLPR  | 0.93473 | 0.91704 | 0.96420 | 0.01941 |
 | LFSD  | 0.87720 | 0.86676 | 0.90660 | 0.05896 |
 | SIP   | 0.90487 | 0.91094 | 0.94262 | 0.03602 |
+# Contact
+Please drop me an email for further problems or discussion: maoyuxin@mail.nwpu.edu.cn
