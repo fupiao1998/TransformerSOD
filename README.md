@@ -1,9 +1,9 @@
 # TrasformerSOD
-Difficulty-aware Salient Object Detection via Deeply-supervised Transformer.
+**Difficulty-aware Salient Object Detection via Deeply-supervised Transformer**.
 
 A unified framework for Trasformer supervised/weakly supervised SOD, RGBD SOD, COD.
 
-The code will be published after the paper is accepted.
+Code will be released very soon.
 # Our results
 The saliency maps of DUTS, ECSSD, DUT, HKU-IS, PASCAL-S, SOD dataset in fully supervised manner are as: [saliency maps1](https://drive.google.com/file/d/13yyQwnbxV2iLoAYd3jmOLeF5w_L_uXkl/view?usp=sharing)
 
@@ -26,5 +26,19 @@ The saliency maps of NJU2K,STERE,DES,NLPR,LFSD,SIP dataset in fully supervised m
 | NLPR  | 0.93473 | 0.91704 | 0.96420 | 0.01941 |
 | LFSD  | 0.87720 | 0.86676 | 0.90660 | 0.05896 |
 | SIP   | 0.90487 | 0.91094 | 0.94262 | 0.03602 |
+
+The saliency maps of  DUTS, ECSSD, DUT, HKU-IS, PASCAL-S, SOD dataset in weakly supervised manner are as: [saliency maps3](https://drive.google.com/file/d/1nchoN8NnHIbfv-0ifYN63YJM_N7cIoSs/view?usp=sharing)
+
+|       | S_measure | F_measure | E_measure | MAE|
+| ------| --------- | --------- | --------- | ---| 
+
+The camouflage maps of  CAMO, CHAMELEON, COD10K, NC4K dataset in weakly supervised manner are as: [camouflage maps](https://drive.google.com/file/d/1vonv9MGKamoLQNIw3AgLkZVj1Jh-Db3i/view?usp=sharing)
+
+|       | S_measure | F_measure | E_measure | MAE|
+| ------| --------- | --------- | --------- | ---| 
+| CAMO  | 0.86132   | 0.84558   | 0.92487   | 0.04681 | 
+| CHAMELEON | 0.89951 | 0.86423 | 0.95401   | 0.02289 |
+| COD10K | 0.85013  | 0.78902   | 0.92432   | 0.02558 |
+| NC4K | 0.87993    | 0.85659   | 0.93243   | 0.03346 |
 # Contact
 Please drop me an email for further problems or discussion: maoyuxin@mail.nwpu.edu.cn
