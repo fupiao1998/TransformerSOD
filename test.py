@@ -63,7 +63,7 @@ for dataset in test_datasets:
         test_loader = test_dataset_rgbd(image_root, depth_root, option['testsize'])
 
     for i in tqdm(range(test_loader.size), desc=dataset):
-        if option['task'] == 'SOD' or option['task'] == 'Weak-RGB-SOD':
+        if option['task'] == 'SOD' or option['task'] == 'Weak-RGB-SOD' or option['task'] == 'COD':
             image, HH, WW, name = test_loader.load_data()
             image = image.cuda()
             torch.cuda.synchronize()
@@ -89,7 +89,7 @@ for dataset in test_datasets:
 # Begin to evaluate the saved masks
 print('========== Begin to evaluate the saved masks ==========')
 for dataset in tqdm(test_datasets):
-    if option['task'] == 'RGBD-SOD':
+    if option['task'] == 'RGBD-SOD' or option['task'] == 'COD':
         gt_root = option['test_dataset_root'] + dataset + '/GT'
     else:
         gt_root = option['test_dataset_root'] + '/GT/' + dataset + '/'

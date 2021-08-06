@@ -53,7 +53,7 @@ param['backbone_name'] = "vitb_rn50_384"   # vitl16_384
 if param['task'] == 'COD':
     param['image_root'] = '/home1/datasets/SOD_COD/COD/camouflage/COD_train/Imgs/'
     param['gt_root'] = '/home1/datasets/SOD_COD/COD/camouflage/COD_train/GT/'
-    param['test_dataset_root'] = '/home1/datasets/SOD_COD/COD/camouflage/COD_test/COD_test/'
+    param['test_dataset_root'] = '/home1/datasets/SOD_COD/COD/COD_test/'
 elif param['task'] == 'SOD':
     param['image_root'] = args.training_path + '/img/'
     param['gt_root'] = args.training_path + '/gt/'
