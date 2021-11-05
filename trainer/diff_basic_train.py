@@ -70,7 +70,9 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, loss_fun):
 
             loss = supervised_loss_with_diff + dis_loss
 
-            visualize_list([torch.sigmoid(ref_pre[0]), torch.sigmoid(ref_pre[1]), torch.sigmoid(ref_pre[2]), torch.sigmoid(ref_pre[3]), gts], option['log_path'])
+            result_list = [torch.sigmoid(x) for x in ref_pre]
+            result_list.append(gts)
+            visualize_list(result_list, option['log_path'])
 
             if rate == 1:
                 loss_record.update(loss.data, option['batch_size'])

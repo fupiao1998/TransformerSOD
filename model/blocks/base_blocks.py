@@ -21,7 +21,7 @@ class BasicConv2d(nn.Module):
         # 2. Norm layer // only suport BN now
         if self.norm is not None:
             x = self.norm(x)
-        # 2. Activation layer // only suport ReLU now
+        # 3. Activation layer // only suport ReLU now
         if self.act is not None:
             x = self.act(x)
         return x

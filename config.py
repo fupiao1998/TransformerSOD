@@ -34,7 +34,7 @@ param['size_rates'] = [1]     # 多尺度训练  [0.75, 1, 1.25]/[1]
 param['neck'] = 'aspp'
 param['neck_channel'] = 128
 param['backbone'] = args.backbone
-param['decoder'] = 'rcab'
+param['decoder'] = 'trans'
 
 if args.use_22k:
     param['pretrain'] = "model/swin_base_patch4_window12_384_22k.pth"
@@ -50,7 +50,7 @@ param['rot_trans_radio'] = 0    # Default 0.5
 
 
 # Backbone Config
-param['model_name'] = '{}_{}_{}'.format(param['backbone'], param['neck'], param['decoder'])   # [VGG, ResNet, DPT]
+param['model_name'] = '{}_{}_{}'.format(param['backbone'], param['neck'], param['decoder'])
 
 
 # Dataset Config

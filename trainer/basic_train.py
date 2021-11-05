@@ -57,8 +57,8 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, loss_fun):
                 discriminator_optimizer.step()
 
             loss = supervised_loss + dis_loss
-
-            visualize_list([torch.sigmoid(ref_pre[0]), torch.sigmoid(ref_pre[1]), torch.sigmoid(ref_pre[2]), torch.sigmoid(ref_pre[3]), gts], option['log_path'])
+            result_list = [torch.sigmoid(x) for x in ref_pre]
+            visualize_list(result_list.append(gts), option['log_path'])
 
             if rate == 1:
                 loss_record.update(loss.data, option['batch_size'])

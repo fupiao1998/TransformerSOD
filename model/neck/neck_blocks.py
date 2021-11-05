@@ -9,9 +9,6 @@ class ASPP_Module(nn.Module):
         for dilation, padding in zip(dilation_series, padding_series):
             self.conv2d_list.append(BasicConv2d(input_channel, out_channel, kernel_size=3, stride=1, padding=padding, dilation=dilation, norm=False))
 
-        # for m in self.conv2d_list:
-        #     m.weight.data.normal_(0, 0.01)
-
     def forward(self, x):
         out = self.conv2d_list[0](x)
         for i in range(len(self.conv2d_list)-1):
