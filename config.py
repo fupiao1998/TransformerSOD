@@ -5,9 +5,8 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Decide Which Task to Training')
 parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'RGBD-SOD', 'Weak-RGB-SOD'])
-parser.add_argument('--model', type=str, default='LateFusion', 
-                    choices=['DPT', 'VGG', 'ResNet', 'LateFusion', 'CrossFusion', 'DPTDS', 'swin', 'swin_rcab', 'swin_rcab_cross'])
-parser.add_argument('--training_path', type=str, default='/home1/datasets/SOD_COD/DUTS/')
+parser.add_argument('--backbone', type=str, default='swin', choices=['swin', 'R50', 'dpt'])
+parser.add_argument('--training_path', type=str, default='/home/maoyuxin/dataset/SOD_COD/DUTS/')
 parser.add_argument('--log_info', type=str, default='REMOVE')
 parser.add_argument('--ckpt', type=str, default=None)
 parser.add_argument('--confiednce_learning', action='store_true')
@@ -31,10 +30,16 @@ param['decay_rate'] = 0.5
 param['decay_epoch'] = 20
 param['beta'] = [0.5, 0.999]  # Adam参数
 param['size_rates'] = [1]     # 多尺度训练  [0.75, 1, 1.25]/[1]
+# Model Config
+param['neck'] = 'aspp'
+param['neck_channel'] = 128
+param['backbone'] = args.backbone
+param['decoder'] = 'rcab'
+
 if args.use_22k:
-    param['pretrain'] = "model/swin/swin_base_patch4_window12_384_22k.pth"
+    param['pretrain'] = "model/swin_base_patch4_window12_384_22k.pth"
 else:
-    param['pretrain'] = "model/swin/swin_base_patch4_window12_384.pth"
+    param['pretrain'] = "model/swin_base_patch4_window12_384.pth"
 param['confiednce_learning'] = args.confiednce_learning
 
 
@@ -45,8 +50,7 @@ param['rot_trans_radio'] = 0    # Default 0.5
 
 
 # Backbone Config
-param['model_name'] = args.model   # [VGG, ResNet, DPT]
-param['backbone_name'] = "vitb_rn50_384"   # vitl16_384
+param['model_name'] = '{}_{}_{}'.format(param['backbone'], param['neck'], param['decoder'])   # [VGG, ResNet, DPT]
 
 
 # Dataset Config
@@ -72,7 +76,7 @@ elif param['task'] == 'Weak-RGB-SOD':
 
 
 # Experiment Dir Config
-log_info = args.model + '_' + args.log_info    # 这个参数可以定义本次实验的名字
+log_info = param['model_name'] + '_' + args.log_info    # 这个参数可以定义本次实验的名字
 param['training_info'] = param['task'] + '_' + str(param['lr']) + '_' + log_info
 param['log_path'] = 'experiments/{}'.format(param['training_info'])   # 日志保存路径
 param['ckpt_save_path'] = param['log_path'] + '/models/'              # 权重保存路径

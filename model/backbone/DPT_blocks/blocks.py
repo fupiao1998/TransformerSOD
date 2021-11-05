@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from model.DPT.vit import (
+from model.backbone.DPT_blocks.vit import (
     _make_pretrained_vitb_rn50_384,
     _make_pretrained_vitl16_384,
     _make_pretrained_vitb16_384,
@@ -27,9 +27,6 @@ def _make_encoder(
             hooks=hooks,
             use_readout=use_readout,
             enable_attention_hooks=enable_attention_hooks,
-        )
-        scratch = _make_scratch(
-            [256, 512, 1024, 1024], features, groups=groups, expand=expand
         )  # ViT-L/16 - 85.0% Top1 (backbone)
     elif backbone == "vitb_rn50_384":
         pretrained = _make_pretrained_vitb_rn50_384(
@@ -38,9 +35,6 @@ def _make_encoder(
             use_vit_only=use_vit_only,
             use_readout=use_readout,
             enable_attention_hooks=enable_attention_hooks,
-        )
-        scratch = _make_scratch(
-            [256, 512, 768, 768], features, groups=groups, expand=expand
         )  # ViT-H/16 - 85.0% Top1 (backbone)
     elif backbone == "vitb16_384":
         pretrained = _make_pretrained_vitb16_384(
@@ -48,21 +42,15 @@ def _make_encoder(
             hooks=hooks,
             use_readout=use_readout,
             enable_attention_hooks=enable_attention_hooks,
-        )
-        scratch = _make_scratch(
-            [96, 192, 384, 768], features, groups=groups, expand=expand
         )  # ViT-B/16 - 84.6% Top1 (backbone)
     elif backbone == "resnext101_wsl":
-        pretrained = _make_pretrained_resnext101_wsl(use_pretrained)
-        scratch = _make_scratch(
-            [256, 512, 1024, 2048], features, groups=groups, expand=expand
-        )  # efficientnet_lite3
+        pretrained = _make_pretrained_resnext101_wsl(use_pretrained)  # efficientnet_lite3
     else:
         print(f"Backbone '{backbone}' not implemented")
         assert False
     # print("Pretrained Transformer have {} paramerters in total".format(sum(x.numel()/1e6 for x in pretrained.parameters())))
 
-    return pretrained, scratch
+    return pretrained
 
 
 def _make_scratch(in_shape, out_shape, groups=1, expand=False):
@@ -372,7 +360,7 @@ class FeatureFusionBlock_custom(nn.Module):
             res = self.resConfUnit1(xs[1])
             output = self.skip_add.add(output, res)
             # output += res
- 
+
         output = self.resConfUnit2(output)
 
         output = nn.functional.interpolate(
