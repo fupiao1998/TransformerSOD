@@ -6,6 +6,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Decide Which Task to Training')
 parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'RGBD-SOD', 'Weak-RGB-SOD'])
 parser.add_argument('--backbone', type=str, default='swin', choices=['swin', 'R50', 'dpt'])
+parser.add_argument('--decoder', type=str, default='rcab', choices=['trans', 'rcab'])
 parser.add_argument('--training_path', type=str, default='/home/maoyuxin/dataset/SOD_COD/DUTS/')
 parser.add_argument('--log_info', type=str, default='REMOVE')
 parser.add_argument('--ckpt', type=str, default=None)
@@ -34,7 +35,7 @@ param['size_rates'] = [1]     # 多尺度训练  [0.75, 1, 1.25]/[1]
 param['neck'] = 'aspp'
 param['neck_channel'] = 128
 param['backbone'] = args.backbone
-param['decoder'] = 'trans'
+param['decoder'] = args.decoder
 
 if args.use_22k:
     param['pretrain'] = "model/swin_base_patch4_window12_384_22k.pth"
@@ -61,7 +62,7 @@ if param['task'] == 'COD':
 elif param['task'] == 'SOD':
     param['image_root'] = args.training_path + '/img/'
     param['gt_root'] = args.training_path + '/gt/'
-    param['test_dataset_root'] = '/home1/datasets/SOD_COD/SOD_RGB/'
+    param['test_dataset_root'] = '/home/maoyuxin/dataset/SOD_COD/SOD_RGB/'
 elif param['task'] == 'RGBD-SOD':
     param['image_root'] = '/home1/datasets/SOD_COD/RGBD_SOD/train/RGB/'
     param['gt_root'] = '/home1/datasets/SOD_COD/RGBD_SOD/train/GT/'

@@ -1,4 +1,5 @@
 import os
+import torch
 import torch.utils.data as data
 import torchvision.transforms as transforms
 import random
@@ -383,15 +384,22 @@ class eval_Dataset(data.Dataset):
 
         self.image_path = list(map(lambda x: os.path.join(img_root, x), pred_list))
         self.label_path = list(map(lambda x: os.path.join(label_root, x), label_list))
+        self.trans = transforms.Compose([transforms.ToTensor()])
+
+    def get_img_pil(self, path):
+        img = Image.open(path).convert('L')
+        return img
 
     def __getitem__(self, item):
         img_path = self.image_path[item]
         label_path = self.label_path[item]
-        pred = Image.open(img_path).convert('L')
-        gt = Image.open(label_path).convert('L')
+        pred = self.get_img_pil(img_path)  # (500, 375)
+        gt = self.get_img_pil(label_path)
         if pred.size != gt.size:
             pred = pred.resize(gt.size, Image.BILINEAR)
-        return pred, gt
+
+        
+        return self.trans(pred), self.trans(gt)
 
     def __len__(self):
         return len(self.image_path)
