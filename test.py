@@ -40,51 +40,51 @@ time_list, mae_list = [], []
 test_epoch_num = option['checkpoint'].split('/')[-1].split('_')[0]
 save_path_base = pre_root + test_epoch_num + '_epoch/'
 # Begin to inference and save masks
-# print('========== Begin to inference and save masks ==========')
-# for dataset in test_datasets:
-#     save_path = save_path_base + dataset + '/'
-#     print('[INFO]: Save_path is', save_path)
-#     if not os.path.exists(save_path):
-#         os.makedirs(save_path)
+print('========== Begin to inference and save masks ==========')
+for dataset in test_datasets:
+    save_path = save_path_base + dataset + '/'
+    print('[INFO]: Save_path is', save_path)
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
 
-#     image_root = ''
-#     if option['task'] == 'COD':
-#         image_root = option['test_dataset_root'] + dataset + '/Imgs/'
-#         test_loader = test_dataset(image_root, option['testsize'])
-#     elif option['task'] == 'SOD':
-#         image_root = option['test_dataset_root'] + '/Imgs/' + dataset + '/'
-#         test_loader = test_dataset(image_root, option['testsize'])
-#     elif option['task'] == 'Weak-RGB-SOD':
-#         image_root = option['test_dataset_root'] + '/Imgs/' + dataset + '/'
-#         test_loader = test_dataset(image_root, option['testsize'])
-#     elif option['task'] == 'RGBD-SOD':
-#         image_root = option['test_dataset_root'] + dataset + '/RGB/'
-#         depth_root = option['test_dataset_root'] + dataset + '/depth/'
-#         test_loader = test_dataset_rgbd(image_root, depth_root, option['testsize'])
+    image_root = ''
+    if option['task'] == 'COD':
+        image_root = option['test_dataset_root'] + dataset + '/Imgs/'
+        test_loader = test_dataset(image_root, option['testsize'])
+    elif option['task'] == 'SOD':
+        image_root = option['test_dataset_root'] + '/Imgs/' + dataset + '/'
+        test_loader = test_dataset(image_root, option['testsize'])
+    elif option['task'] == 'Weak-RGB-SOD':
+        image_root = option['test_dataset_root'] + '/Imgs/' + dataset + '/'
+        test_loader = test_dataset(image_root, option['testsize'])
+    elif option['task'] == 'RGBD-SOD':
+        image_root = option['test_dataset_root'] + dataset + '/RGB/'
+        depth_root = option['test_dataset_root'] + dataset + '/depth/'
+        test_loader = test_dataset_rgbd(image_root, depth_root, option['testsize'])
 
-#     for i in tqdm(range(test_loader.size), desc=dataset):
-#         if option['task'] == 'SOD' or option['task'] == 'Weak-RGB-SOD' or option['task'] == 'COD':
-#             image, HH, WW, name = test_loader.load_data()
-#             image = image.cuda()
-#             torch.cuda.synchronize()
-#             start = time.time()
-#             res = generator.forward(image)
-#         elif option['task'] == 'RGBD-SOD':
-#             image, depth, HH, WW, name = test_loader.load_data()
-#             image, depth = image.cuda(), depth.cuda()
-#             torch.cuda.synchronize()
-#             start = time.time()
-#             res = generator.forward(image, depth)
+    for i in tqdm(range(test_loader.size), desc=dataset):
+        if option['task'] == 'SOD' or option['task'] == 'Weak-RGB-SOD' or option['task'] == 'COD':
+            image, HH, WW, name = test_loader.load_data()
+            image = image.cuda()
+            torch.cuda.synchronize()
+            start = time.time()
+            res = generator.forward(image)
+        elif option['task'] == 'RGBD-SOD':
+            image, depth, HH, WW, name = test_loader.load_data()
+            image, depth = image.cuda(), depth.cuda()
+            torch.cuda.synchronize()
+            start = time.time()
+            res = generator.forward(image, depth)
 
-#         res = res[-1]   # Inference and get the last one of the output list
-#         res = F.upsample(res, size=[WW, HH], mode='bilinear', align_corners=False)
-#         res = res.sigmoid().data.cpu().numpy().squeeze()
-#         torch.cuda.synchronize()
-#         end = time.time()
-#         time_list.append(end-start)
-#         res = 255*(res - res.min()) / (res.max() - res.min() + 1e-8)
-#         cv2.imwrite(save_path+name, res)
-#     print('[INFO] Avg. Time used in this sequence: {:.4f}s'.format(np.mean(time_list)))
+        res = res[-1]   # Inference and get the last one of the output list
+        res = F.upsample(res, size=[WW, HH], mode='bilinear', align_corners=False)
+        res = res.sigmoid().data.cpu().numpy().squeeze()
+        torch.cuda.synchronize()
+        end = time.time()
+        time_list.append(end-start)
+        res = 255*(res - res.min()) / (res.max() - res.min() + 1e-8)
+        cv2.imwrite(save_path+name, res)
+    print('[INFO] Avg. Time used in this sequence: {:.4f}s'.format(np.mean(time_list)))
 
 # Begin to evaluate the saved masks
 print('========== Begin to evaluate the saved masks ==========')
