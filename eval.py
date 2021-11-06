@@ -1,3 +1,8 @@
+# --------------------------------------------------------
+# Measurement programs that do not consume CPU
+# Written by Mao Yuxin
+# maoyuxin@mail.nwpu.edu.cn
+# --------------------------------------------------------
 import os
 from time import time
 import torch
@@ -5,12 +10,8 @@ import argparse
 import numpy as np
 import pandas as pd
 import os.path as osp
-import torch.nn as nn
 import torch.utils.data as data
 from dataset.dataloader import eval_Dataset
-# from config import param as option
-torch.set_num_threads(1)
-
 
 
 def eval_mae_single(pred, gt):

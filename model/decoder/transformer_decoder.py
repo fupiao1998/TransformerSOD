@@ -52,13 +52,19 @@ class transformer_decoder(nn.Module):
         self.transformer = Transformer(vit_params, c4_channels=c4_channels)
 
         self.conv_c1 = _ConvBNReLU(c1_channels, hid_dim, 1, norm_layer=norm_layer)
+        self.conv_c2 = _ConvBNReLU(c1_channels, hid_dim, 1, norm_layer=norm_layer)
+        self.conv_c3 = _ConvBNReLU(c1_channels, hid_dim, 1, norm_layer=norm_layer)
 
-        self.lay1 = SeparableConv2d(last_channels+nhead, hid_dim, 3, norm_layer=norm_layer, relu_first=False)
-        self.lay2 = SeparableConv2d(hid_dim, hid_dim, 3, norm_layer=norm_layer, relu_first=False)
+        self.lay5 = SeparableConv2d(last_channels+nhead, hid_dim, 3, norm_layer=norm_layer, relu_first=False)
+        self.lay4 = SeparableConv2d(hid_dim, hid_dim, 3, norm_layer=norm_layer, relu_first=False)
         self.lay3 = SeparableConv2d(hid_dim, hid_dim, 3, norm_layer=norm_layer, relu_first=False)
+        self.lay2 = SeparableConv2d(hid_dim, hid_dim, 3, norm_layer=norm_layer, relu_first=False)
+        self.lay1 = SeparableConv2d(hid_dim, hid_dim, 3, norm_layer=norm_layer, relu_first=False)
 
-        self.pred = nn.Conv2d(hid_dim, 1, 1)
-
+        self.pred_4 = nn.Conv2d(hid_dim, 1, 1)
+        self.pred_3 = nn.Conv2d(hid_dim, 1, 1)
+        self.pred_2 = nn.Conv2d(hid_dim, 1, 1)
+        self.pred_1 = nn.Conv2d(hid_dim, 1, 1)
 
     def forward(self, features):
         c1, c2, c3, c4, c5 = features[0], features[1], features[2], features[3], features[4]
@@ -68,25 +74,31 @@ class transformer_decoder(nn.Module):
         B, nclass, nhead, _ = attn_map.shape
         _, _, H, W = feat_enc.shape
         attn_map = attn_map.reshape(B*nclass, nhead, H, W)
-        x = torch.cat([_expand(feat_enc, nclass), attn_map], 1)
+        x = torch.cat([feat_enc, attn_map], 1)  # [8, 132, 12, 12])
 
-        x = self.lay1(x)
-        x = self.lay2(x)
-
-        size = c1.size()[2:]
-        x = F.interpolate(x, size, mode='bilinear', align_corners=True)
-        c1 = self.conv_c1(c1)
-        x = x + _expand(c1, nclass)
-
+        x = self.lay4(self.lay5(x))   # [8, hid_dim, 12, 12])
+        x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
+        c3 = self.conv_c3(c3)
+        x = x + c3
         x = self.lay3(x)
-        x = self.pred(x).reshape(B, nclass, size[0], size[1])
-        x = F.upsample(x, scale_factor=4, mode='bilinear', align_corners=True)
+        out_3 = self.pred_3(x)
+        out_3 = F.upsample(out_3, scale_factor=16, mode='bilinear', align_corners=True)
 
-        return [x]
+        x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
+        c2 = self.conv_c2(c2)
+        x = x + c2
+        x = self.lay2(x)
+        out_2 = self.pred_2(x)
+        out_2 = F.upsample(out_2, scale_factor=8, mode='bilinear', align_corners=True)
 
+        x = F.interpolate(x, scale_factor=2, mode='bilinear', align_corners=True)
+        c1 = self.conv_c1(c1)
+        x = x + c1
+        x = self.lay1(x)
+        out_1 = self.pred_1(x)
+        out_1 = F.upsample(out_1, scale_factor=4, mode='bilinear', align_corners=True)
 
-def _expand(x, nclass):
-    return x.unsqueeze(1).repeat(1, nclass, 1, 1, 1).flatten(0, 1)
+        return [out_3, out_2, out_1]
 
 
 if __name__ == '__main__':
