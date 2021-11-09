@@ -33,7 +33,7 @@ param['beta'] = [0.5, 0.999]  # Adam参数
 param['size_rates'] = [1]     # 多尺度训练  [0.75, 1, 1.25]/[1]
 # Model Config
 param['neck'] = 'aspp'
-param['neck_channel'] = 128
+param['neck_channel'] = 64
 param['backbone'] = args.backbone
 param['decoder'] = args.decoder
 
@@ -62,7 +62,7 @@ if param['task'] == 'COD':
 elif param['task'] == 'SOD':
     param['image_root'] = args.training_path + '/img/'
     param['gt_root'] = args.training_path + '/gt/'
-    param['test_dataset_root'] = '/home/maoyuxin/dataset/SOD_COD/SOD_RGB/'
+    param['test_dataset_root'] = '/home2/dataset/maoyuxin/SOD_COD/SOD_RGB/'
 elif param['task'] == 'RGBD-SOD':
     param['image_root'] = '/home1/datasets/SOD_COD/RGBD_SOD/train/RGB/'
     param['gt_root'] = '/home1/datasets/SOD_COD/RGBD_SOD/train/GT/'

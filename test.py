@@ -16,12 +16,11 @@ from model.get_model import get_model
 def eval_mae(loader, cuda=True):
     avg_mae, img_num, total = 0.0, 0.0, 0.0
     with torch.no_grad():
-        trans = transforms.Compose([transforms.ToTensor()])
         for pred, gt in loader:
             if cuda:
-                pred, gt = trans(pred).cuda(), trans(gt).cuda()
+                pred, gt = pred.cuda(), gt.cuda()
             else:
-                pred, gt = trans(pred), trans(gt)
+                pred, gt = (pred), (gt)
             mae = torch.abs(pred - gt).mean()
             if mae == mae: # for Nan
                 avg_mae += mae

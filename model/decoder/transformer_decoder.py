@@ -4,6 +4,7 @@ import torch.nn.functional as F
 
 from model.decoder.trans_blocks.basic import _ConvBNReLU, SeparableConv2d
 from model.decoder.trans_blocks.transformer import VisionTransformer
+from model.decoder.rcab_decoder import rcab_decoder
 
 
 
@@ -42,6 +43,39 @@ class Transformer(nn.Module):
         return x, attns_list
 
 
+class transformer_decoder(nn.Module):
+    def __init__(self, vit_params, channels=2048, hid_dim=64, norm_layer=nn.BatchNorm2d):
+        super().__init__()
+
+        last_channels = vit_params['embed_dim']
+        nhead = vit_params['num_heads']
+
+        self.transformer = Transformer(vit_params, c4_channels=channels)
+
+        self.lay5 = SeparableConv2d(last_channels+nhead, hid_dim, 3, norm_layer=norm_layer, relu_first=False)
+        self.lay4 = SeparableConv2d(hid_dim, hid_dim, 3, norm_layer=norm_layer, relu_first=False)
+        option = {}; option['neck_channel'] = hid_dim
+        self.decoder = rcab_decoder(option)
+
+    def forward(self, features):
+        c1, c2, c3, c4, c5 = features[0], features[1], features[2], features[3], features[4]
+        feat_enc, attns_list = self.transformer(c5)
+        
+        attn_map = attns_list[-1]
+        B, nclass, nhead, _ = attn_map.shape
+        _, _, H, W = feat_enc.shape
+        attn_map = attn_map.reshape(B*nclass, nhead, H, W)
+        x = torch.cat([feat_enc, attn_map], 1)  # [8, 132, 12, 12])
+
+        c5 = self.lay4(self.lay5(x))   # [8, hid_dim, 12, 12])
+        feature2decoder = [c1, c2, c3, c4, c5]
+        [output1, output2, output3, output4, output5] = self.decoder(feature2decoder)
+
+        return [output1, output2, output3, output4, output5]
+
+
+
+'''
 class transformer_decoder(nn.Module):
     def __init__(self, vit_params, c1_channels=256, c4_channels=2048, hid_dim=64, norm_layer=nn.BatchNorm2d):
         super().__init__()
@@ -99,6 +133,7 @@ class transformer_decoder(nn.Module):
         out_1 = F.upsample(out_1, scale_factor=4, mode='bilinear', align_corners=True)
 
         return [out_3, out_2, out_1]
+'''
 
 
 if __name__ == '__main__':
