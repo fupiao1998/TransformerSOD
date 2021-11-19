@@ -25,3 +25,27 @@ class BasicConv2d(nn.Module):
         if self.act is not None:
             x = self.act(x)
         return x
+
+
+class ResidualBlock(nn.Module):
+    def __init__(self, in_planes, planes, stride=1):
+        super(ResidualBlock, self).__init__()
+  
+        self.ConvBNReLU1 = BasicConv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, norm=True, act=True)
+        self.ConvBNReLU2 = BasicConv2d(planes, planes, kernel_size=3, padding=1, norm=True, act=True)
+        self.relu = nn.ReLU(inplace=True)
+
+        if stride == 1:
+            self.downsample = None
+        else:    
+            self.downsample = BasicConv2d(in_planes, planes, kernel_size=1, stride=stride, norm=True)
+
+    def forward(self, x):
+        y = x
+        y = self.ConvBNReLU1(y)
+        y = self.ConvBNReLU2(y)
+
+        if self.downsample is not None:
+            x = self.downsample(x)
+
+        return self.relu(x+y)

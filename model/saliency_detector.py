@@ -3,6 +3,7 @@ import torch.nn as nn
 from model.backbone.get_backbone import get_backbone
 from model.neck.get_neck import get_neck
 from model.decoder.get_decoder import get_decoder
+from model.depth_module.get_depth_module import get_depth_module
 
 
 class sod_model(torch.nn.Module):
@@ -12,10 +13,20 @@ class sod_model(torch.nn.Module):
         self.backbone, self.channel_list = get_backbone(option)
         self.neck = get_neck(option, self.channel_list)
         self.decoder = get_decoder(option)
+        self.depth_module = get_depth_module(option)
 
     def forward(self, x, depth=None):
+        if depth is not None:
+            if 'head' in self.depth_module.keys():
+                x = self.depth_module['head'](x, depth)
+            elif 'feature' in self.depth_module.keys():
+                depth_features = self.depth_module['feature'](depth)
+
         backbone_features = self.backbone(x)
         neck_features = self.neck(backbone_features)
+        if depth is not None and 'fusion' in self.depth_module.keys():
+            neck_features = self.depth_module['fusion'](neck_features, depth_features)
+
         outputs = self.decoder(neck_features)
 
         return outputs
@@ -36,17 +47,10 @@ class Discriminator(nn.Module):
         self.bn4 = nn.BatchNorm2d(ndf)
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.leaky_relu(x)
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.leaky_relu(x)
-        x = self.conv3(x)
-        x = self.bn3(x)
-        x = self.leaky_relu(x)
-        x = self.conv4(x)
-        x = self.bn4(x)
-        x = self.leaky_relu(x)
+        x = self.leaky_relu(self.bn1(self.conv1(x)))
+        x = self.leaky_relu(self.bn2(self.conv2(x)))
+        x = self.leaky_relu(self.bn3(self.conv3(x)))
+        x = self.leaky_relu(self.bn4(self.conv4(x)))
+
         x = self.classifier(x)
         return x

@@ -107,7 +107,7 @@ class SalObjDatasetRGBD(data.Dataset):
     def __getitem__(self, index):
         image = self.rgb_loader(self.images[index])
         gt = self.binary_loader(self.gts[index])
-        depth = self.rgb_loader(self.depths[index])
+        depth = self.binary_loader(self.depths[index])
         image, gt, depth = cv_random_flip_rgbd(image, gt, depth)
         image, gt, depth = randomCrop_rgbd(image, gt, depth)
         image, gt, depth = randomRotation_rgbd(image, gt, depth)
@@ -312,7 +312,7 @@ class test_dataset_rgbd:
         HH = image.size[0]
         WW = image.size[1]
         image = self.transform(image).unsqueeze(0)
-        depth = self.rgb_loader(self.depths[self.index])
+        depth = self.binary_loader(self.depths[self.index])
         depth = self.depths_transform(depth).unsqueeze(0)
 
         name = self.images[self.index].split('/')[-1]
