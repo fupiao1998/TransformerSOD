@@ -8,14 +8,14 @@ def get_backbone(option):
         pretrained_dict = torch.load(option['pretrain'])["model"]
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in backbone.state_dict()}
         backbone.load_state_dict(pretrained_dict)
-        channel_list = [128, 256, 512, 1024, 1024]
+        channel_list = [128, 256, 512, 1024]
     elif option['backbone'].lower() == 'r50':
         from model.backbone.resnet import ResNet50Backbone
         backbone = ResNet50Backbone()
-        channel_list = [256, 512, 1024, 2048, 2048]
+        channel_list = [256, 512, 1024, 2048]
     elif option['backbone'].lower() == 'dpt':
         from model.backbone.DPT import DPT
         backbone = DPT().cuda()
-        channel_list = [256, 512, 768, 768, 768]
+        channel_list = [256, 512, 768, 768]
 
     return backbone, channel_list

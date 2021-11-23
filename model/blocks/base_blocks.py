@@ -33,7 +33,6 @@ class ResidualBlock(nn.Module):
   
         self.ConvBNReLU1 = BasicConv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, norm=True, act=True)
         self.ConvBNReLU2 = BasicConv2d(planes, planes, kernel_size=3, padding=1, norm=True, act=True)
-        self.relu = nn.ReLU(inplace=True)
 
         if stride == 1:
             self.downsample = None
@@ -48,4 +47,44 @@ class ResidualBlock(nn.Module):
         if self.downsample is not None:
             x = self.downsample(x)
 
-        return self.relu(x+y)
+        return x + y
+
+
+class FeatureFusionBlock(nn.Module):
+
+    def __init__(self, features):
+        super(FeatureFusionBlock, self).__init__()
+        self.resConfUnit1 = ResidualBlock(features, features)
+        self.resConfUnit2 = ResidualBlock(features, features)
+
+    def forward(self, *xs):
+        output = xs[0]
+
+        if len(xs) == 2:
+            output += self.resConfUnit1(xs[1])
+            output = self.resConfUnit2(output)
+            output = nn.functional.interpolate(output, scale_factor=2, mode="bilinear", align_corners=True)
+
+            return output
+        else:
+            output = self.resConfUnit2(output)
+            output = nn.functional.interpolate(output, scale_factor=2, mode="bilinear", align_corners=True)
+
+            return output
+
+
+class SimpleHead(nn.Module):
+    def __init__(self, channel, rate):
+        super(SimpleHead, self).__init__()
+        self.upsample = nn.Upsample(scale_factor=rate, mode='bilinear', align_corners=True)
+  
+        self.output_conv = nn.Sequential(
+            nn.Conv2d(channel, channel//2, kernel_size=3, stride=1, padding=1),
+            self.upsample,
+            nn.Conv2d(channel//2, channel//4, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv2d(channel//4, 1, kernel_size=1, stride=1, padding=0),
+        )
+
+    def forward(self, x):
+        return self.output_conv(x)

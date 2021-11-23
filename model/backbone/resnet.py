@@ -35,7 +35,7 @@ class ResNet101Backbone(nn.Module):
         output_list.append(x)
         x = self.layer4(x)
         output_list.append(x)
-        output_list.append(self.resize_feat(x, x.shape[-1], x.shape[1]))
+        # output_list.append(self.resize_feat(x, x.shape[-1], x.shape[1]))
         return output_list
 
 

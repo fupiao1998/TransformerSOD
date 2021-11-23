@@ -81,6 +81,6 @@ class DPT(BaseModel):
             x.contiguous(memory_format=torch.channels_last)
 
         layer_1, layer_2, layer_3, layer_4 = forward_vit(self.pretrained, x)
-        layer_5 = self.resize_feat(layer_4, layer_4.shape[-1], layer_4.shape[1])
+        # layer_5 = self.resize_feat(layer_4, layer_4.shape[-1], layer_4.shape[1])
         # import pdb; pdb.set_trace()
-        return [layer_1, layer_2, layer_3, layer_4, layer_5]
+        return [layer_1, layer_2, layer_3, layer_4]

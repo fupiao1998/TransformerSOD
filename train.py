@@ -9,13 +9,13 @@ from loss.get_loss import get_loss
 from optim.get_optim import get_optim, get_optim_dis
 from torch.utils.tensorboard import SummaryWriter
 
-if option['task'] == 'Weak-RGB-SOD':
-    from trainer.weakly_train import train_one_epoch
-elif option['task'] == 'SOD' or option['task'] == 'COD' :     
-    from trainer.diff_basic_train import train_one_epoch
-elif option['task'] == 'RGBD-SOD':
-    from trainer.diff_rgbd_train import train_one_epoch
-
+# if option['task'] == 'Weak-RGB-SOD':
+#     from trainer.weakly_train import train_one_epoch
+# elif option['task'] == 'SOD' or option['task'] == 'COD' :     
+#     from trainer.diff_basic_train import train_one_epoch
+# elif option['task'] == 'RGBD-SOD':
+#     from trainer.diff_rgbd_train import train_one_epoch
+from trainer.trainer_vae import train_one_epoch
 
 if __name__ == "__main__":
     # Begin the training process
@@ -27,7 +27,7 @@ if __name__ == "__main__":
         optimizer_dis, scheduler_dis = get_optim_dis(option, dis_model.parameters())
     else:
         optimizer_dis, scheduler_dis = None, None
-    train_loader = get_loader(option)
+    train_loader, dataset_size = get_loader(option)
     model_list, optimizer_list = [model, dis_model], [optimizer, optimizer_dis]
     writer = SummaryWriter(option['log_path'])
     
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     save_scripts(option['log_path'], scripts_to_save=glob('model/neck/*.py', recursive=True))
 
     for epoch in range(1, (option['epoch']+1)):
-        model, loss_record = train_one_epoch(epoch, model_list, optimizer_list, train_loader, loss_fun)
+        model, loss_record = train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_size, loss_fun)
         writer.add_scalar('loss', loss_record.show(), epoch)
         writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
         scheduler.step()

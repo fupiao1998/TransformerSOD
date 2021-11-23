@@ -28,6 +28,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, loss_fun):
             generator_optimizer.zero_grad()
             if discriminator is not None:
                 discriminator_optimizer.zero_grad()
+            import pdb; pdb.set_trace()
             images, gts = pack[0].cuda(), pack[1].cuda()
 
             # multi-scale training samples

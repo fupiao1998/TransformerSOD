@@ -40,7 +40,7 @@ class SalObjDatasetRGB(data.Dataset):
         gt = randomPeper(gt)
         image = self.img_transform(image)
         gt = self.gt_transform(gt)
-        return image, gt
+        return {'image': image, 'gt': gt, 'index': index}
 
     def filter_files(self):
         assert len(self.images) == len(self.gts)
@@ -117,7 +117,7 @@ class SalObjDatasetRGBD(data.Dataset):
         gt = self.gt_transform(gt)
         depth = self.depths_transform(depth)
 
-        return image, gt, depth
+        return {'image': image, 'gt': gt, 'depth': depth, 'index': index}
 
     def filter_files(self):
         assert len(self.images) == len(self.gts) and len(self.gts) == len(self.images)
@@ -204,7 +204,7 @@ class SalObjDatasetWeak(data.Dataset):
         mask = self.mask_transform(mask)
         gray = self.gray_transform(gray)
 
-        return image, gt, mask, gray
+        return {'image': image, 'gt': gt, 'mask': mask, 'gray': gray}
 
     def filter_files(self):
         assert len(self.images) == len(self.gts)
@@ -254,8 +254,7 @@ class SalObjDatasetWeak(data.Dataset):
 class test_dataset:
     def __init__(self, image_root, testsize):
         self.testsize = testsize
-        self.images = [image_root + f for f in os.listdir(image_root) if f.endswith('.jpg')
-                    or f.endswith('.png')]
+        self.images = [image_root + f for f in os.listdir(image_root) if f.endswith('.jpg') or f.endswith('.png')]
         self.images = sorted(self.images)
         self.transform = transforms.Compose([
             transforms.Resize((self.testsize, self.testsize)),

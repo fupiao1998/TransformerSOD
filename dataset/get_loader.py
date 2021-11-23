@@ -14,4 +14,4 @@ def get_loader(option, pin_memory=True):
                                   shuffle=True,
                                   num_workers=option['batch_size'],
                                   pin_memory=pin_memory)
-    return data_loader
+    return data_loader, dataset.size

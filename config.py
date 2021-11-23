@@ -6,12 +6,12 @@ import argparse
 parser = argparse.ArgumentParser(description='Decide Which Task to Training')
 parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'RGBD-SOD', 'Weak-RGB-SOD'])
 parser.add_argument('--backbone', type=str, default='swin', choices=['swin', 'R50', 'dpt'])
-parser.add_argument('--decoder', type=str, default='rcab', choices=['trans', 'rcab'])
+parser.add_argument('--decoder', type=str, default='simple', choices=['trans', 'rcab', 'simple'])
 parser.add_argument('--fusion', type=str, default='early', choices=['early', 'late'])
 parser.add_argument('--fusion_method', type=str, default='refine', choices=['refine', 'attention'])
-parser.add_argument('--training_path', type=str, default='/home/maoyuxin/dataset/SOD_COD/DUTS/')
+parser.add_argument('--training_path', type=str, default='/home1/maoyuxin/datasets/SOD/DUTS/')
 parser.add_argument('--log_info', type=str, default='REMOVE')
-parser.add_argument('--neck_channel', type=int)
+parser.add_argument('--neck_channel', type=int, default=64)
 parser.add_argument('--ckpt', type=str, default=None)
 parser.add_argument('--confiednce_learning', action='store_true')
 parser.add_argument('--use_22k', action='store_true')
@@ -26,19 +26,28 @@ param['epoch'] = 50           # 训练轮数
 param['seed'] = 1234          # 随机种子 
 param['batch_size'] = 4 if param['task']=='Weak-RGB-SOD' else 8       # 批大小
 param['save_epoch'] = 5       # 每隔多少轮保存一次模型
-param['lr_config'] = {'beta': [0.5, 0.999], 'lr': 2.5e-5, 'lr_dis': 1e-5, 'decay_rate': 0.5, 'decay_epoch': 20, 'gamma': 0.98}
+param['lr_config'] = {'beta': [0.5, 0.999], 'lr': 2.5e-5, 'lr_dis': 1e-5, 
+                      'decay_rate': 0.5, 'decay_epoch': 20, 'gamma': 0.98}
 param['trainsize'] = 384      # 训练图片尺寸
 param['optim'] = "AdamW"
 param['size_rates'] = [1]     # 多尺度训练  [0.75, 1, 1.25]/[1]
 ## Model Config
 # RGB Model
-param['neck'] = 'aspp'
+param['neck'] = 'basic'
+param['deep_sup'] = False
 param['neck_channel'] = args.neck_channel
 param['backbone'] = args.backbone
 param['decoder'] = args.decoder
 # Depth Model
 param['fusion'] = args.fusion   # [early, late, cross]
 param['fusion_method'] = args.fusion_method
+
+##### uncertainty configs [work in process] #####
+param['latent_dim'] = 32
+param['langevin_step_num_gen'] = 5
+param['sigma_gen'] = 0.3
+param['langevin_s'] = 0.1
+##### uncertainty configs [work in process] #####
 
 if args.use_22k:
     param['pretrain'] = "model/swin_base_patch4_window12_384_22k.pth"
@@ -65,10 +74,10 @@ elif param['task'] == 'SOD':
     param['gt_root'] = args.training_path + '/gt/'
     param['test_dataset_root'] = '/home2/dataset/maoyuxin/SOD_COD/SOD_RGB/'
 elif param['task'] == 'RGBD-SOD':
-    param['image_root'] = '/home/maoyuxin/dataset/SOD_COD/RGBD_SOD/train/RGB/'
-    param['gt_root'] = '/home/maoyuxin/dataset/SOD_COD/RGBD_SOD/train/GT/'
-    param['depth_root'] = '/home/maoyuxin/dataset/SOD_COD/RGBD_SOD/train/depth/'
-    param['test_dataset_root'] = '/home/maoyuxin/dataset/SOD_COD/RGBD_SOD/test/'
+    param['image_root'] = '/home1/maoyuxin/datasets/SOD/RGBD_SOD/train/RGB/'
+    param['gt_root'] = '/home1/maoyuxin/datasets/SOD/RGBD_SOD/train/GT/'
+    param['depth_root'] = '/home1/maoyuxin/datasets/SOD/RGBD_SOD/train/depth/'
+    param['test_dataset_root'] = '/home1/maoyuxin/datasets/SOD/RGBD_SOD/test/'
 elif param['task'] == 'Weak-RGB-SOD':
     param['image_root'] = '/home1/datasets/SOD_COD/Scribble_SOD/img/'
     param['gt_root'] = '/home1/datasets/SOD_COD/Scribble_SOD/gt/'

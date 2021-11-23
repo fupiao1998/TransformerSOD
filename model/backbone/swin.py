@@ -572,7 +572,7 @@ class SwinTransformer(nn.Module):
             num_passed += 1
             x = layer(x)
 
-        features.append(self.resize_feat(x, num_passed-1))
+        # features.append(self.resize_feat(x, num_passed-1))
 
         # x = self.norm(x)  # B L C
         # x = self.avgpool(x.transpose(1, 2))  # B C 1

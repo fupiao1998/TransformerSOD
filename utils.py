@@ -3,6 +3,7 @@ import cv2
 import shutil
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable
 import torch
 import numpy as np
 import random
@@ -107,3 +108,47 @@ def save_scripts(path, scripts_to_save=None):
             except IOError:
                 os.makedirs(os.path.dirname(dst_path))
                 shutil.copy(script, dst_path)
+
+
+def torch_tile(a, dim, n_tile):
+    """
+    This function is taken form PyTorch forum and mimics the behavior of tf.tile.
+    Source: https://discuss.pytorch.org/t/how-to-tile-a-tensor/13853/3
+    """
+    init_dim = a.size(dim)
+    repeat_idx = [1] * a.dim()
+    repeat_idx[dim] = n_tile
+    a = a.repeat(*(repeat_idx))
+    order_index = torch.LongTensor(np.concatenate([init_dim * np.arange(n_tile) + i for i in range(init_dim)])).to(a.device)
+
+    return torch.index_select(a, dim, order_index)
+
+
+def reparametrize(mu, logvar):
+    std = logvar.mul(0.5).exp_()
+    eps = torch.cuda.FloatTensor(std.size()).normal_()
+    eps = Variable(eps)
+
+    return eps.mul(std).add_(mu)
+
+
+def l2_regularisation(m):
+    l2_reg = None
+
+    for W in m.parameters():
+        if l2_reg is None:
+            l2_reg = W.norm(2)
+        else:
+            l2_reg = l2_reg + W.norm(2)
+    return l2_reg
+
+
+def linear_annealing(init, fin, step, annealing_steps):
+    """Linear annealing of a parameter."""
+    if annealing_steps == 0:
+        return fin
+    assert fin > init
+    delta = fin - init
+    annealed = min(init + delta * step / annealing_steps, fin)
+
+    return annealed
