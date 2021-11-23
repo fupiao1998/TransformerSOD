@@ -46,12 +46,10 @@ else:
     param['pretrain'] = "model/swin_base_patch4_window12_384.pth"
 param['confiednce_learning'] = args.confiednce_learning
 
-
 # Model Config
 param['use_attention'] = False
 param['scale_trans_radio'] = 0  # Default 0.5
 param['rot_trans_radio'] = 0    # Default 0.5
-
 
 # Backbone Config
 param['model_name'] = '{}_{}_{}'.format(param['backbone'], param['neck'], param['decoder'])
