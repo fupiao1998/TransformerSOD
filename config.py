@@ -40,7 +40,6 @@ param['decoder'] = args.decoder
 param['fusion'] = args.fusion   # [early, late, cross]
 param['fusion_method'] = args.fusion_method
 
-
 if args.use_22k:
     param['pretrain'] = "model/swin_base_patch4_window12_384_22k.pth"
 else:
