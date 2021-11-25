@@ -30,7 +30,7 @@ class basic_neck(torch.nn.Module):
         self.in_channel_list = in_channel_list
         self.conv_list = nn.ModuleList()
         for in_channel_i in self.in_channel_list:
-            self.conv_list.append(DimReduce(in_channel_i, self.out_channel).cuda())
+            self.conv_list.append(DimReduce(in_channel_i, self.out_channel))
         # swin<->in_channel_list: [128, 256, 512, 1024, 1024]
 
     def forward(self, features):

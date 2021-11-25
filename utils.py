@@ -152,3 +152,8 @@ def linear_annealing(init, fin, step, annealing_steps):
     annealed = min(init + delta * step / annealing_steps, fin)
 
     return annealed
+
+
+def make_dis_label(label, gts):
+    D_label = torch.ones(gts.shape, device=gts.device, requires_grad=False).float() * label
+    return D_label

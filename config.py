@@ -43,10 +43,10 @@ param['fusion'] = args.fusion   # [early, late, cross]
 param['fusion_method'] = args.fusion_method
 
 ##### uncertainty configs [work in process] #####
-param['latent_dim'] = 32
-param['langevin_step_num_gen'] = 5
-param['sigma_gen'] = 0.3
-param['langevin_s'] = 0.1
+param['latent_dim'] = 32   # For vae, it is 8, for abp and gan, it is 32
+# param['langevin_step_num_gen'] = 5
+# param['sigma_gen'] = 0.3
+# param['langevin_s'] = 0.1
 ##### uncertainty configs [work in process] #####
 
 if args.use_22k:

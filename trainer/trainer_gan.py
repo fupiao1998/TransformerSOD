@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from tqdm import tqdm
 from config import param as option
-from utils import AvgMeter, label_edge_prediction, visualize_list, l2_regularisation, linear_annealing
+from utils import AvgMeter, label_edge_prediction, visualize_list, make_dis_label
 from loss.get_loss import cal_loss
 
 
@@ -21,17 +21,14 @@ class DotDict(dict):
         else:
             self.__dict__ = dict()
 
-
 CE = torch.nn.BCELoss()
-mse_loss = torch.nn.MSELoss(size_average=True, reduction='sum')
 def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_size, loss_fun):
-    ## Setup vae params
+    ## Setup abp params
     opt = DotDict()
-    opt.reg_weight  = 1e-4
-    opt.lat_weight = 1
-    opt.vae_loss_weight = 0.4
-    opt.langevin_s = 0.1
-    ## Setup vae params
+    opt.latent_dim = option['latent_dim']
+    opt.pred_label = 0
+    opt.gt_label = 1
+    ## Setup abp params
 
     generator, discriminator = model_list
     generator_optimizer, discriminator_optimizer = optimizer_list
@@ -43,8 +40,6 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
     progress_bar = tqdm(train_loader, desc='Epoch[{:03d}/{:03d}]'.format(epoch, option['epoch']))
     for i, pack in enumerate(progress_bar):
         for rate in option['size_rates']:
-            if i > 200:
-                continue
             generator_optimizer.zero_grad()
             if discriminator is not None:
                 discriminator_optimizer.zero_grad()
@@ -61,32 +56,40 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 images = F.upsample(images, size=trainsize, mode='bilinear', align_corners=True)
                 gts = F.upsample(gts, size=trainsize, mode='bilinear', align_corners=True)
 
-            pred_prior, pred_post, latent_loss = generator(img=images, gts=gts)
-            reg_loss = l2_regularisation(generator.vae_model.enc_x) + \
-                       l2_regularisation(generator.vae_model.enc_xy) + \
-                       l2_regularisation(generator.decoder_prior) + \
-                       l2_regularisation(generator.decoder_post)
-            # reg_loss = l2_regularisation(generator.enc_x) + \
-            #            l2_regularisation(generator.enc_xy) + \
-            #            l2_regularisation(generator.prior_dec) + \
-            #            l2_regularisation(generator.post_dec)
-            reg_loss = opt.reg_weight * reg_loss
-            anneal_reg = 0.01  # linear_annealing(0, 1, epoch, option['epoch'])
-            loss_latent = opt.lat_weight * anneal_reg * latent_loss
-            gen_loss_cvae = opt.vae_loss_weight * (loss_fun(pred_post[0], gts) + loss_latent)  # BUG: Only support for single out
-            gen_loss_gsnn = (1 - opt.vae_loss_weight) * loss_fun(pred_prior[0], gts)  # BUG: Only support for single out
-            loss_all = gen_loss_cvae + gen_loss_gsnn + reg_loss
+            z_noise = torch.randn(images.shape[0], opt.latent_dim).cuda()
+            pred = generator(img=images, z=z_noise)
+            Dis_output = discriminator(torch.cat((images, pred[0].detach()), 1))
+            up_size = (images.shape[2], images.shape[3])
+            Dis_output = F.upsample(Dis_output, size=up_size, mode='bilinear', align_corners=True)
+            
+            loss_dis_output = CE(torch.sigmoid(Dis_output), make_dis_label(opt.gt_label, gts))
+            supervised_loss = loss_fun(pred[0], gts)
+            loss_all = supervised_loss + 0.1*loss_dis_output
+            # import pdb; pdb.set_trace()
             loss_all.backward()
             generator_optimizer.step()
 
-            result_list = [torch.sigmoid(x) for x in pred_post]
+            # ## train discriminator
+            dis_pred = torch.sigmoid(pred[0]).detach()
+            Dis_output = discriminator(torch.cat((images, dis_pred), 1))
+            Dis_target = discriminator(torch.cat((images, gts), 1))
+            Dis_output = F.upsample(torch.sigmoid(Dis_output), size=up_size, mode='bilinear', align_corners=True)
+            Dis_target = F.upsample(torch.sigmoid(Dis_target), size=up_size, mode='bilinear', align_corners=True)
+
+            loss_dis_output = CE(Dis_output, make_dis_label(opt.pred_label, gts))
+            loss_dis_target = CE(Dis_target, make_dis_label(opt.gt_label, gts))
+            dis_loss = 0.5 * (loss_dis_output + loss_dis_target)
+            dis_loss.backward()
+            discriminator_optimizer.step()
+
+            result_list = [torch.sigmoid(x) for x in pred]
             result_list.append(gts)
             visualize_list(result_list, option['log_path'])
 
             if rate == 1:
-                loss_record.update(gen_loss_cvae.data, option['batch_size'])
-                supervised_loss_record.update(gen_loss_gsnn.data, option['batch_size'])
-                dis_loss_record.update(reg_loss.data, option['batch_size'])
+                loss_record.update(supervised_loss.data, option['batch_size'])
+                supervised_loss_record.update((loss_all-supervised_loss).data, option['batch_size'])
+                dis_loss_record.update(dis_loss.data, option['batch_size'])
 
         progress_bar.set_postfix(loss=f'{loss_record.show():.3f}|{supervised_loss_record.show():.3f}|{dis_loss_record.show():.3f}')
 

@@ -10,7 +10,8 @@ def get_model(option):
     else:
         dis_model = None
         print("[INFO]: No Discriminator, Only training for Generator!")
-    model = sod_model_with_vae(option=option).cuda()
+    model = sod_model(option=option).cuda()
+    # model = sod_model_with_vae(option=option).cuda()
 
     print("[INFO]: Model based on [{}] have {:.4f}Mb paramerters in total".format(option['model_name'], sum(x.numel()/1e6 for x in model.parameters())))
 
