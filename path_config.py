@@ -20,7 +20,7 @@ def get_path_dict(hostname, task):
             path_dict['mask_root'] = '/home1/datasets/SOD_COD/Scribble_SOD/mask/'
             path_dict['gray_root'] = '/home1/datasets/SOD_COD/Scribble_SOD/gray/'
             path_dict['test_dataset_root'] = '/home1/datasets/SOD_COD/SOD_RGB/'
-    elif hostname == 'server06':
+    elif hostname == 'gpu6':
         if task == 'COD':
             path_dict['image_root'] = '/home1/datasets/SOD_COD/COD/camouflage/COD_train/Imgs/'
             path_dict['gt_root'] = '/home1/datasets/SOD_COD/COD/camouflage/COD_train/GT/'
