@@ -4,11 +4,14 @@ from dataset.dataloader import SalObjDatasetRGBD, SalObjDatasetWeak, SalObjDatas
 
 def get_loader(option, pin_memory=True):
     if option['task'] == 'RGBD-SOD':
-        dataset = SalObjDatasetRGBD(option['image_root'], option['gt_root'], option['depth_root'], trainsize=option['trainsize'])
+        dataset = SalObjDatasetRGBD(option['paths']['image_root'], option['paths']['gt_root'], 
+                                    option['paths']['depth_root'], trainsize=option['trainsize'])
     elif option['task'] == 'Weak-RGB-SOD':
-        dataset = SalObjDatasetWeak(option['image_root'], option['gt_root'], option['mask_root'], option['gray_root'], trainsize=option['trainsize'])
+        dataset = SalObjDatasetWeak(option['paths']['image_root'], option['paths']['gt_root'], 
+                                    option['paths']['mask_root'], option['paths']['gray_root'], 
+                                    trainsize=option['trainsize'])
     else:
-        dataset = SalObjDatasetRGB(option['image_root'], option['gt_root'], trainsize=option['trainsize'])
+        dataset = SalObjDatasetRGB(option['paths']['image_root'], option['paths']['gt_root'], trainsize=option['trainsize'])
     data_loader = data.DataLoader(dataset=dataset,
                                   batch_size=option['batch_size'],
                                   shuffle=True,

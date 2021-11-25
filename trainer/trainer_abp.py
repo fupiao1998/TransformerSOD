@@ -9,27 +9,17 @@ from tqdm import tqdm
 from config import param as option
 from utils import AvgMeter, label_edge_prediction, visualize_list
 from loss.get_loss import cal_loss
-
-
-class DotDict(dict):
-    def __init__(self, *args, **kwargs):
-        dict.__init__(self, *args, **kwargs)
-        self.__dict__ = self
-    def allowDotting(self, state=True):
-        if state:
-            self.__dict__ = self
-        else:
-            self.__dict__ = dict()
+from utils import DotDict
 
 
 CE = torch.nn.BCELoss()
 def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_size, loss_fun):
     ## Setup abp params
     opt = DotDict()
-    opt.latent_dim = 32
-    opt.langevin_step_num_gen = 5
-    opt.sigma_gen = 0.3
-    opt.langevin_s = 0.1
+    opt.latent_dim = option['abp_config']['latent_dim']
+    opt.langevin_step_num_gen = option['abp_config']['step_num']
+    opt.sigma_gen = option['abp_config']['sigma_gen']
+    opt.langevin_s = option['abp_config']['langevin_s']
     train_z = torch.FloatTensor(dataset_size, opt.latent_dim).normal_(0, 1).cuda()
     ## Setup abp params
 

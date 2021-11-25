@@ -7,19 +7,14 @@ from utils import set_seed, save_scripts
 from model.get_model import get_model
 from loss.get_loss import get_loss
 from optim.get_optim import get_optim, get_optim_dis
+from trainer.get_trainer import get_trainer
 from torch.utils.tensorboard import SummaryWriter
 
-# if option['task'] == 'Weak-RGB-SOD':
-#     from trainer.weakly_train import train_one_epoch
-# elif option['task'] == 'SOD' or option['task'] == 'COD' :     
-#     from trainer.diff_basic_train import train_one_epoch
-# elif option['task'] == 'RGBD-SOD':
-#     from trainer.diff_rgbd_train import train_one_epoch
-from trainer.trainer_gan import train_one_epoch
 
 if __name__ == "__main__":
     # Begin the training process
     set_seed(option['seed'])
+    train_one_epoch = get_trainer(option)
     loss_fun = get_loss(option)
     model, dis_model = get_model(option)
     optimizer, scheduler = get_optim(option, model.parameters())

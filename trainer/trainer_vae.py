@@ -9,17 +9,7 @@ from tqdm import tqdm
 from config import param as option
 from utils import AvgMeter, label_edge_prediction, visualize_list, l2_regularisation, linear_annealing
 from loss.get_loss import cal_loss
-
-
-class DotDict(dict):
-    def __init__(self, *args, **kwargs):
-        dict.__init__(self, *args, **kwargs)
-        self.__dict__ = self
-    def allowDotting(self, state=True):
-        if state:
-            self.__dict__ = self
-        else:
-            self.__dict__ = dict()
+from utils import DotDict
 
 
 CE = torch.nn.BCELoss()
@@ -27,10 +17,9 @@ mse_loss = torch.nn.MSELoss(size_average=True, reduction='sum')
 def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_size, loss_fun):
     ## Setup vae params
     opt = DotDict()
-    opt.reg_weight  = 1e-4
-    opt.lat_weight = 1
-    opt.vae_loss_weight = 0.4
-    opt.langevin_s = 0.1
+    opt.reg_weight = option['vae_config']['reg_weight']
+    opt.lat_weight = option['vae_config']['lat_weight']
+    opt.vae_loss_weight = option['vae_config']['vae_loss_weight']
     ## Setup vae params
 
     generator, discriminator = model_list

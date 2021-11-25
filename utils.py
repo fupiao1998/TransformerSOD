@@ -157,3 +157,14 @@ def linear_annealing(init, fin, step, annealing_steps):
 def make_dis_label(label, gts):
     D_label = torch.ones(gts.shape, device=gts.device, requires_grad=False).float() * label
     return D_label
+
+
+class DotDict(dict):
+    def __init__(self, *args, **kwargs):
+        dict.__init__(self, *args, **kwargs)
+        self.__dict__ = self
+    def allowDotting(self, state=True):
+        if state:
+            self.__dict__ = self
+        else:
+            self.__dict__ = dict()

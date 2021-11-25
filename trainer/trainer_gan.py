@@ -9,26 +9,17 @@ from tqdm import tqdm
 from config import param as option
 from utils import AvgMeter, label_edge_prediction, visualize_list, make_dis_label
 from loss.get_loss import cal_loss
+from utils import DotDict
 
-
-class DotDict(dict):
-    def __init__(self, *args, **kwargs):
-        dict.__init__(self, *args, **kwargs)
-        self.__dict__ = self
-    def allowDotting(self, state=True):
-        if state:
-            self.__dict__ = self
-        else:
-            self.__dict__ = dict()
 
 CE = torch.nn.BCELoss()
 def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_size, loss_fun):
-    ## Setup abp params
+    ## Setup gan params
     opt = DotDict()
-    opt.latent_dim = option['latent_dim']
-    opt.pred_label = 0
-    opt.gt_label = 1
-    ## Setup abp params
+    opt.latent_dim = option['gan_config']['latent_dim']
+    opt.pred_label = option['gan_config']['pred_label']
+    opt.gt_label = option['gan_config']['gt_label']
+    ## Setup gan params
 
     generator, discriminator = model_list
     generator_optimizer, discriminator_optimizer = optimizer_list
