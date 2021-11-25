@@ -32,8 +32,6 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
     progress_bar = tqdm(train_loader, desc='Epoch[{:03d}/{:03d}]'.format(epoch, option['epoch']))
     for i, pack in enumerate(progress_bar):
         for rate in option['size_rates']:
-            if i > 200:
-                continue
             generator_optimizer.zero_grad()
             if discriminator is not None:
                 discriminator_optimizer.zero_grad()
@@ -55,10 +53,6 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                        l2_regularisation(generator.vae_model.enc_xy) + \
                        l2_regularisation(generator.decoder_prior) + \
                        l2_regularisation(generator.decoder_post)
-            # reg_loss = l2_regularisation(generator.enc_x) + \
-            #            l2_regularisation(generator.enc_xy) + \
-            #            l2_regularisation(generator.prior_dec) + \
-            #            l2_regularisation(generator.post_dec)
             reg_loss = opt.reg_weight * reg_loss
             anneal_reg = 0.01  # linear_annealing(0, 1, epoch, option['epoch'])
             loss_latent = opt.lat_weight * anneal_reg * latent_loss
