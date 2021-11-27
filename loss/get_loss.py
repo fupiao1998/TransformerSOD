@@ -1,10 +1,21 @@
+import torch
 from loss.structure_loss import structure_loss
 
 
+
+def bce_loss_with_sigmoid(pred, gt, weight):
+    loss = torch.nn.BCELoss().cuda()
+    
+    return loss(torch.sigmoid(pred), gt)
+
+
 def get_loss(option):
-    task = option['task']
+    # task = option['task']
     # if task == 'COD' or task == 'SOD':
-    loss_fun = structure_loss
+    if option['loss'] == 'structure':
+        loss_fun = structure_loss
+    elif option['loss'] == 'bce':
+        loss_fun = bce_loss_with_sigmoid
 
     return loss_fun
 

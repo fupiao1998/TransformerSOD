@@ -18,6 +18,10 @@ def get_model(option):
         uncertainty_model = ebm_prior(option['ebm_config']['ebm_out_dim'], 
                                       option['ebm_config']['ebm_middle_dim'], 
                                       option['ebm_config']['latent_dim']).cuda()
+    elif option['uncer_method'].lower() == 'basic':
+        model = sod_model(option=option).cuda()
+        uncertainty_model = None
+
     param_count = sum(x.numel()/1e6 for x in model.parameters())
     print("[INFO]: Model based on [{}] have {:.4f}Mb paramerters in total".format(option['model_name'], param_count))
 
