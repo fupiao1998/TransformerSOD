@@ -12,7 +12,7 @@ parser.add_argument('--decoder', type=str, default='simple', choices=['trans', '
 parser.add_argument('--fusion', type=str, default='early', choices=['early', 'late'])
 parser.add_argument('--loss', type=str, default='structure', choices=['structure', 'bce'])
 parser.add_argument('--fusion_method', type=str, default='refine', choices=['refine', 'attention'])
-parser.add_argument('--uncer_method', type=str, default='gan', choices=['gan', 'vae', 'abp', 'ebm'])
+parser.add_argument('--uncer_method', type=str, default='gan', choices=['gan', 'vae', 'abp', 'ebm', 'basic'])
 parser.add_argument('--training_path', type=str, default='/home1/maoyuxin/datasets/SOD/DUTS/')
 parser.add_argument('--log_info', type=str, default='REMOVE')
 parser.add_argument('--neck_channel', type=int, default=64)
