@@ -38,7 +38,7 @@ if __name__ == "__main__":
     save_scripts(option['log_path'], scripts_to_save=glob('model/neck/*.py', recursive=True))
 
     for epoch in range(1, (option['epoch']+1)):
-        model, loss_record = train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_size, loss_fun)
+        model_dict, loss_record = train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_size, loss_fun)
         writer.add_scalar('loss', loss_record.show(), epoch)
         writer.add_scalar('lr', optimizer.param_groups[0]['lr'], epoch)
         scheduler.step()
@@ -50,4 +50,7 @@ if __name__ == "__main__":
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         if epoch % option['save_epoch'] == 0:
-            torch.save(model.state_dict(), save_path + '/{:0>2d}_{:.4f}'.format(epoch, loss_record.show()) + '.pth')
+            for model_name in model_dict.keys():
+                save_name = os.path.join(save_path, '{:0>2d}_{:.3f}_{}.pth'.format(epoch, loss_record.show(), model_name))
+                if model_dict[model_name] is not None:
+                    torch.save(model_dict[model_name].state_dict(), save_name)

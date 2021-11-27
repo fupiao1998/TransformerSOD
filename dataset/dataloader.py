@@ -254,7 +254,7 @@ class SalObjDatasetWeak(data.Dataset):
 class test_dataset:
     def __init__(self, image_root, testsize):
         self.testsize = testsize
-        self.images = [image_root + f for f in os.listdir(image_root) if f.endswith('.jpg') or f.endswith('.png')]
+        self.images = [os.path.join(image_root, f) for f in os.listdir(image_root) if f.endswith('.jpg') or f.endswith('.png')]
         self.images = sorted(self.images)
         self.transform = transforms.Compose([
             transforms.Resize((self.testsize, self.testsize)),
@@ -288,9 +288,9 @@ class test_dataset:
 class test_dataset_rgbd:
     def __init__(self, image_root, depth_root, testsize):
         self.testsize = testsize
-        self.images = [image_root + f for f in os.listdir(image_root) if f.endswith('.jpg')
+        self.images = [os.path.join(image_root, f) for f in os.listdir(image_root) if f.endswith('.jpg')
                        or f.endswith('.png')]
-        self.depths = [depth_root + f for f in os.listdir(depth_root) if f.endswith('.bmp')
+        self.depths = [os.path.join(depth_root, f) for f in os.listdir(depth_root) if f.endswith('.bmp')
                        or f.endswith('.png')]
         self.images = sorted(self.images)
         self.depths = sorted(self.depths)

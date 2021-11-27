@@ -159,6 +159,23 @@ def make_dis_label(label, gts):
     return D_label
 
 
+def sample_p_0(images, opt):
+    b, c, h, w = images.shape
+    return opt.e_init_sig * torch.randn(*[b, opt.latent_dim]).to(images.device)
+
+
+def compute_energy(option, score):
+    if option.e_energy_form == 'tanh':
+        energy = F.tanh(score.squeeze())
+    elif option.e_energy_form == 'sigmoid':
+        energy = F.sigmoid(score.squeeze())
+    elif option.e_energy_form == 'softplus':
+        energy = F.softplus(score.squeeze())
+    else:
+        energy = score.squeeze()
+    return energy
+
+
 class DotDict(dict):
     def __init__(self, *args, **kwargs):
         dict.__init__(self, *args, **kwargs)

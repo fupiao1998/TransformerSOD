@@ -8,7 +8,7 @@ def get_path_dict(hostname, task):
         elif task == 'SOD':
             path_dict['image_root'] = '/home1/maoyuxin/datasets/SOD/DUTS/img/'
             path_dict['gt_root'] = '/home1/maoyuxin/datasets/SOD/DUTS/gt/'
-            path_dict['test_dataset_root'] = '/home2/dataset/maoyuxin/SOD_COD/SOD_RGB/'
+            path_dict['test_dataset_root'] = '/home1/maoyuxin/datasets/SOD/SOD_RGB/'
         elif task == 'RGBD-SOD':
             path_dict['image_root'] = '/home1/maoyuxin/datasets/SOD/RGBD_SOD/train/RGB/'
             path_dict['gt_root'] = '/home1/maoyuxin/datasets/SOD/RGBD_SOD/train/GT/'

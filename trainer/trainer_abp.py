@@ -91,4 +91,4 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
 
         progress_bar.set_postfix(loss=f'{loss_record.show():.3f}|{supervised_loss_record.show():.3f}|{dis_loss_record.show():.3f}')
 
-    return generator, loss_record
+    return {'generator': generator, "discriminator": discriminator}, loss_record

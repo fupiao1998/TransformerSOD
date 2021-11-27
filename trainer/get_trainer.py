@@ -5,5 +5,7 @@ def get_trainer(option):
         from trainer.trainer_vae import train_one_epoch
     elif option['uncer_method'].lower() == 'abp':
         from trainer.trainer_abp import train_one_epoch
+    elif option['uncer_method'].lower() == 'ebm':
+        from trainer.trainer_ebm import train_one_epoch
 
     return train_one_epoch

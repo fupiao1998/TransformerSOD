@@ -1,6 +1,7 @@
 import copy
 import torch
 import torch.nn as nn
+import torch.nn.utils.spectral_norm as sn
 from utils import torch_tile, reparametrize
 from model.backbone.get_backbone import get_backbone
 from model.neck.get_neck import get_neck
@@ -46,11 +47,12 @@ class sod_model_with_vae(torch.nn.Module):
         super(sod_model_with_vae, self).__init__()
 
         self.backbone, self.channel_list = get_backbone(option)
-        self.neck = get_neck(option, self.channel_list)
+        self.neck_prior = get_neck(option, self.channel_list)
         self.decoder_prior = get_decoder(option)
         self.depth_module = get_depth_module(option)
         self.vae_model = vae_model(option)
         self.decoder_post = copy.deepcopy(self.decoder_prior)
+        self.neck_post = copy.deepcopy(self.neck_prior)
 
     def forward(self, img, z=None, gts=None, depth=None):
         if depth is not None:
@@ -60,12 +62,12 @@ class sod_model_with_vae(torch.nn.Module):
                 depth_features = self.depth_module['feature'](depth)
         
         backbone_features = self.backbone(img)
-        neck_features = self.neck(backbone_features)
-
-        neck_features_z_prior, neck_features_z_post, kld = self.vae_model(img, neck_features, gts)
-
-        if depth is not None and 'fusion' in self.depth_module.keys():
-            neck_features = self.depth_module['fusion'](neck_features, depth_features)
+        neck_features_prior = self.neck_prior(backbone_features)
+        neck_features_post = self.neck_post(backbone_features)
+        vae_model_input = [img, neck_features_prior, neck_features_post, gts]
+        neck_features_z_prior, neck_features_z_post, kld = self.vae_model(*vae_model_input)
+        # if depth is not None and 'fusion' in self.depth_module.keys():
+        #     neck_features = self.depth_module['fusion'](neck_features, depth_features)
 
         if gts is not None:   # In the training case with gt
             outputs_prior = self.decoder_prior(neck_features_z_prior)
@@ -87,23 +89,23 @@ class vae_model(nn.Module):
         self.noise_model_prior = noise_model(option)
         self.noise_model_post = noise_model(option)
 
-    def forward(self, img, neck_features, y=None):
-        if y == None:
-            import pdb ; pdb.set_trace()
+    def forward(self, img, neck_features_prior, neck_features_post, y=None):
+        if y is None:
             mu_prior, logvar_prior, _ = self.enc_x(img)
             z_prior = reparametrize(mu_prior, logvar_prior)
-            neck_features = self.noise_model_prior(z_prior, neck_features)
+            neck_features_z_prior = self.noise_model_prior(z_prior, neck_features_prior)
 
-            return neck_features, None, None
+            return neck_features_z_prior, None, None
         else:
             mu_prior, logvar_prior, dist_prior = self.enc_x(img)
-            mu_post, logvar_post, dist_post = self.enc_xy(torch.cat((img, y), 1))
-            kld = torch.mean(torch.distributions.kl.kl_divergence(dist_post, dist_prior))
             z_prior = reparametrize(mu_prior, logvar_prior)
-            z_post = reparametrize(mu_post, logvar_post)
-            neck_features_z_prior = self.noise_model_prior(z_prior, neck_features)
-            neck_features_z_post = self.noise_model_post(z_post, neck_features)
+            neck_features_z_prior = self.noise_model_prior(z_prior, neck_features_prior)
 
+            mu_post, logvar_post, dist_post = self.enc_xy(torch.cat((img, y), 1))
+            z_post = reparametrize(mu_post, logvar_post)
+            neck_features_z_post = self.noise_model_post(z_post, neck_features_post)
+
+            kld = torch.mean(torch.distributions.kl.kl_divergence(dist_post, dist_prior))
             return neck_features_z_prior, neck_features_z_post, kld
 
 
@@ -130,9 +132,9 @@ class noise_model(nn.Module):
         return neck_features
 
 
-class Discriminator(nn.Module):
+class discriminator(nn.Module):
     def __init__(self, ndf):
-        super(Discriminator, self).__init__()
+        super(discriminator, self).__init__()
         self.conv1 = nn.Conv2d(4, ndf, kernel_size=3, stride=2, padding=1)
         self.conv2 = nn.Conv2d(ndf, ndf, kernel_size=3, stride=1, padding=1)
         self.conv3 = nn.Conv2d(ndf, ndf, kernel_size=3, stride=2, padding=1)
@@ -186,7 +188,7 @@ class encode_for_vae(nn.Module):
         output = self.leakyrelu(self.bn3(self.layer3(output)))
         output = self.leakyrelu(self.bn4(self.layer4(output)))
         output = self.leakyrelu(self.bn5(self.layer5(output)))
-        output = output.view(-1, self.channel * 8 * self.hidden_size * self.hidden_size)  # adjust according to input size
+        output = output.view(-1, self.channel*8*self.hidden_size*self.hidden_size)  # adjust according to input size
         # output = self.tanh(output)
 
         mu = self.fc1(output)
@@ -194,6 +196,25 @@ class encode_for_vae(nn.Module):
         dist = torch.distributions.Independent(torch.distributions.Normal(loc=mu, scale=torch.exp(logvar)), 1)
 
         return mu, logvar, dist
+
+
+class ebm_prior(nn.Module):
+    def __init__(self, ebm_out_dim, ebm_middle_dim, latent_dim):
+        super().__init__()
+        e_sn = False
+        apply_sn = sn if e_sn else lambda x: x
+
+        self.ebm = nn.Sequential(
+            apply_sn(nn.Linear(latent_dim, ebm_middle_dim)),
+            torch.nn.GELU(),
+            apply_sn(nn.Linear(ebm_middle_dim, ebm_middle_dim)),
+            torch.nn.GELU(),
+            apply_sn(nn.Linear(ebm_middle_dim, ebm_out_dim))
+        )
+        self.ebm_out_dim = ebm_out_dim
+
+    def forward(self, z):
+        return self.ebm(z).view(-1, self.ebm_out_dim, 1, 1)
 
 
 # ##### Temp vae codes (for debug) ####

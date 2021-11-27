@@ -62,7 +62,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
             loss_all.backward()
             generator_optimizer.step()
 
-            result_list = [torch.sigmoid(x) for x in pred_post]
+            result_list = [torch.sigmoid(x) for x in pred_prior]
             result_list.append(gts)
             visualize_list(result_list, option['log_path'])
 
@@ -73,4 +73,4 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
 
         progress_bar.set_postfix(loss=f'{loss_record.show():.3f}|{supervised_loss_record.show():.3f}|{dis_loss_record.show():.3f}')
 
-    return generator, loss_record
+    return {'generator': generator, "discriminator": discriminator}, loss_record

@@ -28,7 +28,7 @@ param['task'] = args.task
 param['epoch'] = 50
 param['seed'] = 1234
 param['batch_size'] = 4 if param['task']=='Weak-RGB-SOD' else 8       # 批大小
-param['save_epoch'] = 5
+param['save_epoch'] = 1
 param['lr_config'] = {'beta': [0.5, 0.999], 'lr': 2.5e-5, 'lr_dis': 1e-5, 
                       'decay_rate': 0.5, 'decay_epoch': 20, 'gamma': 0.98}
 param['trainsize'] = 384
@@ -51,6 +51,9 @@ param['uncer_method'] = args.uncer_method   # gan, vae, abp, ebm
 param['vae_config'] = {'reg_weight': 1e-4, 'lat_weight': 1, 'vae_loss_weight': 0.4, 'latent_dim': 8}
 param['gan_config'] = {'pred_label': 0, 'gt_label': 1, 'latent_dim': 32}
 param['abp_config'] = {'step_num': 5, 'sigma_gen': 0.3, 'langevin_s': 0.1, 'latent_dim': 32}
+param['ebm_config'] = {'ebm_out_dim': 1, 'ebm_middle_dim': 100, 'latent_dim': 32, 'e_init_sig': 1.0, 
+                       'e_l_steps': 5, 'e_l_step_size': 0.4, 'e_prior_sig': 1.0, 'g_l_steps': 5,
+                       'g_llhd_sigma': 0.3, 'g_l_step_size': 0.1, 'e_energy_form': 'identity'}
 param['latent_dim'] = param['{}_config'.format(param['uncer_method'])]['latent_dim']
 ##### uncertainty configs [work in process] #####
 

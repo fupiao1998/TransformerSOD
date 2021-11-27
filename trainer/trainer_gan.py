@@ -56,11 +56,10 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
             loss_dis_output = CE(torch.sigmoid(Dis_output), make_dis_label(opt.gt_label, gts))
             supervised_loss = loss_fun(pred[0], gts)
             loss_all = supervised_loss + 0.1*loss_dis_output
-            # import pdb; pdb.set_trace()
             loss_all.backward()
             generator_optimizer.step()
 
-            # ## train discriminator
+            # train discriminator
             dis_pred = torch.sigmoid(pred[0]).detach()
             Dis_output = discriminator(torch.cat((images, dis_pred), 1))
             Dis_target = discriminator(torch.cat((images, gts), 1))
@@ -84,4 +83,4 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
 
         progress_bar.set_postfix(loss=f'{loss_record.show():.3f}|{supervised_loss_record.show():.3f}|{dis_loss_record.show():.3f}')
 
-    return generator, loss_record
+    return {'generator': generator, "discriminator": discriminator}, loss_record
