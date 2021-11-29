@@ -3,10 +3,8 @@ from loss.structure_loss import structure_loss
 
 
 
-def bce_loss_with_sigmoid(pred, gt, weight):
-    loss = torch.nn.BCELoss().cuda()
-    
-    return loss(torch.sigmoid(pred), gt)
+def bce_loss_with_sigmoid(pred, gt, weight=None):    
+    return torch.nn.functional.binary_cross_entropy(torch.sigmoid(pred), gt)
 
 
 def get_loss(option):
@@ -25,6 +23,11 @@ def cal_loss(pred, gt, loss_fun, weight=None):
         loss = 0
         for i in pred:
             loss_curr = loss_fun(i, gt, weight)
+            loss += loss_curr
+        loss = loss / len(pred)
+    if isinstance(pred, dict):
+        for key in pred.keys():
+            loss_curr = loss_fun(pred(key), gt, weight)
             loss += loss_curr
         loss = loss / len(pred)
     else:

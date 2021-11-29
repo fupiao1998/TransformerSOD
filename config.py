@@ -34,7 +34,7 @@ param['lr_config'] = {'beta': [0.5, 0.999], 'lr': 2.5e-5, 'lr_dis': 1e-5,
                       'decay_rate': 0.5, 'decay_epoch': 20, 'gamma': 0.98}
 param['trainsize'] = 384
 param['optim'] = "AdamW"
-param['loss'] = "structure"
+param['loss'] = args.loss
 param['size_rates'] = [1] 
 
 ## Model Config
