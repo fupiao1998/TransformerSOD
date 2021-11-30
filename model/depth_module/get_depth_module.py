@@ -14,5 +14,7 @@ def get_depth_module(option):
             from model.depth_module.feature_fusion import feature_fusion
             depth_module['feature'] = depth_feature(in_planes=128, out_planes=option['neck_channel'])
             depth_module['fusion'] = feature_fusion(option=option)
+        elif option['fusion'].lower() == 'rgb':
+            depth_module['rgb'] = nn.ModuleList()
 
     return depth_module

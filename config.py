@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser(description='Decide Which Task to Training')
 parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'RGBD-SOD', 'Weak-RGB-SOD'])
 parser.add_argument('--backbone', type=str, default='swin', choices=['swin', 'R50', 'dpt'])
 parser.add_argument('--decoder', type=str, default='simple', choices=['trans', 'rcab', 'simple', 'cat'])
-parser.add_argument('--fusion', type=str, default='early', choices=['early', 'late'])
+parser.add_argument('--fusion', type=str, default='early', choices=['early', 'late', 'rgb'])
 parser.add_argument('--loss', type=str, default='structure', choices=['structure', 'bce'])
 parser.add_argument('--fusion_method', type=str, default='refine', choices=['refine', 'attention'])
 parser.add_argument('--uncer_method', type=str, default='gan', choices=['gan', 'vae', 'abp', 'ebm', 'basic'])
@@ -26,12 +26,14 @@ param = {}
 param['task'] = args.task
 
 ## Training Config
-param['epoch'] = 50
+epoch_dict = {'SOD': 50, 'RGBD-SOD': 100, 'Weak-RGB-SOD': 30}
+decay_dict = {'SOD': 20, 'RGBD-SOD': 40, 'Weak-RGB-SOD': 12}
+param['epoch'] = epoch_dict[param['task']]
 param['seed'] = 1234
 param['batch_size'] = 4 if param['task']=='Weak-RGB-SOD' else 8       # 批大小
 param['save_epoch'] = 5
 param['lr_config'] = {'beta': [0.5, 0.999], 'lr': 2.5e-5, 'lr_dis': 1e-5, 
-                      'decay_rate': 0.5, 'decay_epoch': 20, 'gamma': 0.98}
+                      'decay_rate': 0.5, 'decay_epoch': decay_dict[param['task']], 'gamma': 0.98}
 param['trainsize'] = 384
 param['optim'] = "AdamW"
 param['loss'] = args.loss
@@ -45,7 +47,7 @@ param['neck_channel'] = args.neck_channel
 param['backbone'] = args.backbone
 param['decoder'] = args.decoder
 # Depth Model
-param['fusion'] = args.fusion   # [early, late, cross]
+param['fusion'] = args.fusion   # [early, late, cross, rgb]
 param['fusion_method'] = args.fusion_method
 
 ##### uncertainty configs [work in process] #####

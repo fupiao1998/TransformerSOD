@@ -27,6 +27,8 @@ class sod_model(torch.nn.Module):
                 img = self.depth_module['head'](img, depth)
             elif 'feature' in self.depth_module.keys():
                 depth_features = self.depth_module['feature'](depth)
+            elif 'rgb' in self.depth_module.keys():
+                img = img
         
         backbone_features = self.backbone(img)
         neck_features = self.neck(backbone_features)
