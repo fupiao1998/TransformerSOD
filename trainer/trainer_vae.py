@@ -56,8 +56,8 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
             reg_loss = opt.reg_weight * reg_loss
             anneal_reg = 0.01  # linear_annealing(0, 1, epoch, option['epoch'])
             loss_latent = opt.lat_weight * anneal_reg * latent_loss
-            gen_loss_cvae = opt.vae_loss_weight * (loss_fun(pred_post[0], gts) + loss_latent)  # BUG: Only support for single out
-            gen_loss_gsnn = (1 - opt.vae_loss_weight) * loss_fun(pred_prior[0], gts)  # BUG: Only support for single out
+            gen_loss_cvae = opt.vae_loss_weight * (cal_loss(pred_post, gts, loss_fun) + loss_latent)  # BUG: Only support for single out
+            gen_loss_gsnn = (1 - opt.vae_loss_weight) * (cal_loss(pred_prior, gts, loss_fun), gts)  # BUG: Only support for single out
             loss_all = gen_loss_cvae + gen_loss_gsnn + reg_loss
             loss_all.backward()
             generator_optimizer.step()

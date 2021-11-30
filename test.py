@@ -111,7 +111,7 @@ class Tester():
             image, HH, WW, name = test_loader.load_data()
             image = image.cuda()
             torch.cuda.synchronize(); start = time.time()
-            if self.option['uncer_method'] == 'vae' or self.option['uncer_method'] == 'abp':
+            if self.option['uncer_method'] == 'vae' or self.option['uncer_method'] == 'abp' or self.option['uncer_method'] == 'basic':
                 res = self.forward_a_sample(image, HH, WW)
             elif self.option['uncer_method'] == 'ebm':
                 res = self.forward_a_sample_ebm(image, HH, WW)

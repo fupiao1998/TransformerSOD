@@ -4,22 +4,14 @@ import cv2
 import time
 import torch
 import torch.nn.functional as F
-from torch.autograd import Variable
 from tqdm import tqdm
 from config import param as option
 from utils import AvgMeter, label_edge_prediction, visualize_list, make_dis_label
 from loss.get_loss import cal_loss
-from utils import DotDict
 
 
 CE = torch.nn.BCELoss()
 def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_size, loss_fun):
-    ## Setup gan params
-    opt = DotDict()
-    opt.latent_dim = option['gan_config']['latent_dim']
-    opt.pred_label = option['gan_config']['pred_label']
-    opt.gt_label = option['gan_config']['gt_label']
-    ## Setup gan params
 
     generator, discriminator = model_list
     generator_optimizer, discriminator_optimizer = optimizer_list
@@ -48,7 +40,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 gts = F.upsample(gts, size=trainsize, mode='bilinear', align_corners=True)
 
             pred = generator(img=images)
-            loss_all = loss_fun(pred[0], gts)
+            loss_all = cal_loss(pred, gts, loss_fun)
 
             loss_all.backward()
             generator_optimizer.step()
@@ -56,6 +48,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
             result_list = [torch.sigmoid(x) for x in pred]
             result_list.append(gts)
             visualize_list(result_list, option['log_path'])
+            del result_list
 
             if rate == 1:
                 loss_record.update(loss_all.data, option['batch_size'])
