@@ -19,11 +19,11 @@ def get_loss(option):
 
 def cal_loss(pred, gt, loss_fun, weight=None):
     if isinstance(pred, list):
-        loss_list = []
+        loss_sum = 0
         for i in pred:
             loss_curr = loss_fun(i, gt, weight)
-            loss_list.append(loss_curr)
-        loss = np.sum(loss_list) / len(pred)
+            loss_sum += loss_curr
+        loss = loss_sum / len(pred)
     elif isinstance(pred, dict):
         import pdb; pdb.set_trace()
         loss = 0
