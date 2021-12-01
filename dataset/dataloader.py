@@ -272,7 +272,7 @@ class test_dataset:
         if name.endswith('.jpg'):
             name = name.split('.jpg')[0] + '.png'
         self.index += 1
-        return image, HH, WW, name
+        return image, None, HH, WW, name
 
     def rgb_loader(self, path):
         with open(path, 'rb') as f:
@@ -286,7 +286,8 @@ class test_dataset:
 
 
 class test_dataset_rgbd:
-    def __init__(self, image_root, depth_root, testsize):
+    def __init__(self, image_root, testsize):
+        depth_root = image_root[:-3] + 'GT'
         self.testsize = testsize
         self.images = [os.path.join(image_root, f) for f in os.listdir(image_root) if f.endswith('.jpg')
                        or f.endswith('.png')]

@@ -48,13 +48,15 @@ class Tester():
             os.makedirs(save_path)
         if self.option['task'] == 'SOD':
             image_root = os.path.join(self.option['paths']['test_dataset_root'], 'Imgs', dataset)
+            test_loader = test_dataset(image_root, option['testsize'])
         elif self.option['task'] == 'RGBD-SOD':
             image_root = os.path.join(self.option['paths']['test_dataset_root'], dataset, 'RGB')
-        test_loader = test_dataset(image_root, option['testsize'])
+            test_loader = test_dataset_rgbd(image_root, option['testsize'])
+        
         return {'save_path': save_path, 'test_loader': test_loader}
 
-    def forward_a_sample(self, image, HH, WW):
-        res = self.model.forward(img=image)[-1]  # Inference and get the last one of the output list
+    def forward_a_sample(self, image, HH, WW, depth=None):
+        res = self.model.forward(img=image, depth=depth)[-1]  # Inference and get the last one of the output list
         res = F.upsample(res, size=[WW, HH], mode='bilinear', align_corners=False)
         res = res.sigmoid().data.cpu().numpy().squeeze()
         res = 255*(res - res.min()) / (res.max() - res.min() + 1e-8)
@@ -111,15 +113,16 @@ class Tester():
 
         time_list = []
         for i in tqdm(range(test_loader.size), desc=dataset):
-            image, HH, WW, name = test_loader.load_data()
+            image, depth, HH, WW, name = test_loader.load_data()  # if no rgbd sod, the depth is none 
             image = image.cuda()
+            if depth is not None: depth = depth.cuda()
             torch.cuda.synchronize(); start = time.time()
             if self.option['uncer_method'] == 'vae' or self.option['uncer_method'] == 'abp' or self.option['uncer_method'] == 'basic':
-                res = self.forward_a_sample(image, HH, WW)
+                res = self.forward_a_sample(image, HH, WW, depth)
             elif self.option['uncer_method'] == 'ebm':
-                res = self.forward_a_sample_ebm(image, HH, WW)
+                res = self.forward_a_sample_ebm(image, HH, WW, depth)
             elif self.option['uncer_method'] == 'gan':
-                res = self.forward_a_sample_gan(image, HH, WW)
+                res = self.forward_a_sample_gan(image, HH, WW, depth)
             torch.cuda.synchronize(); end = time.time()
             time_list.append(end-start)
 
