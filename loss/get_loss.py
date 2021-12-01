@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 from loss.structure_loss import structure_loss
+from loss.weakly_loss import weakly_loss
 
 
 
@@ -13,6 +14,8 @@ def get_loss(option):
         loss_fun = structure_loss
     elif option['loss'] == 'bce':
         loss_fun = bce_loss_with_sigmoid
+    elif option['loss'] == 'weak':
+        loss_fun = weakly_loss()
 
     return loss_fun
 

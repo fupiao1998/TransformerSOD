@@ -87,7 +87,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
 
             z_g_noise = z.detach()  ## z+
 
-            pred = generator(images, z_g_noise)
+            pred = generator(img=images, z=z_g_noise, depth=depth)
             loss_all = cal_loss(pred, gts, loss_fun)
 
             loss_all.backward()

@@ -204,7 +204,7 @@ class SalObjDatasetWeak(data.Dataset):
         mask = self.mask_transform(mask)
         gray = self.gray_transform(gray)
 
-        return {'image': image, 'gt': gt, 'mask': mask, 'gray': gray}
+        return {'image': image, 'gt': gt, 'mask': mask, 'gray': gray, 'index': index}
 
     def filter_files(self):
         assert len(self.images) == len(self.gts)
@@ -220,7 +220,6 @@ class SalObjDatasetWeak(data.Dataset):
         self.gts = gts
         self.masks = masks
         self.grays = grays
-
 
     def rgb_loader(self, path):
         with open(path, 'rb') as f:

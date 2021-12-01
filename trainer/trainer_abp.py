@@ -56,7 +56,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 z_noise = Variable(z_noise_preds[kk], requires_grad=True).cuda()
                 noise = torch.randn(z_noise.size()).cuda()
 
-                gen_res = generator(img=images, z=z_noise)
+                gen_res = generator(img=images, z=z_noise, depth=depth)
                 gen_loss = 0
                 for i in gen_res:
                     gen_loss += 1 / (2.0 * opt.sigma_gen * opt.sigma_gen) * F.mse_loss(torch.sigmoid(i), gts, size_average=True, reduction='sum')
@@ -70,8 +70,8 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
             z_noise_ref = z_noise_preds[-1]
             z_noise_init = z_noise_preds[0]
 
-            pred_init = generator(images, z_noise_init)
-            pred_ref = generator(images, z_noise_ref)
+            pred_init = generator(images, z_noise_init, depth=depth)
+            pred_ref = generator(images, z_noise_ref, depth=depth)
 
             ## Caltulate loss
             loss_init, loss_ref = cal_loss(pred_init, gts, loss_fun), cal_loss(pred_ref, gts, loss_fun)

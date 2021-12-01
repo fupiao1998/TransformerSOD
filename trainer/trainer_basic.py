@@ -30,8 +30,8 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 images, gts, depth, index = pack['image'].cuda(), pack['gt'].cuda(), None, pack['index']
             elif len(pack) == 4:
                 images, gts, depth, index = pack['image'].cuda(), pack['gt'].cuda(), pack['depth'].cuda(), pack['index']
-            # elif len(pack) == 4:
-            #     images, gts, mask, gray = pack['image'].cuda(), pack['gt'].cuda(), pack['mask'].cuda(), pack['gray'].cuda()
+            elif len(pack) == 5:
+                images, gts, mask, gray, depth, index = pack['image'].cuda(), pack['gt'].cuda(), pack['mask'].cuda(), pack['gray'].cuda(), None, pack['index']
 
             # multi-scale training samples
             trainsize = (int(round(option['trainsize']*rate/32)*32), int(round(option['trainsize']*rate/32)*32))
@@ -39,8 +39,11 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 images = F.upsample(images, size=trainsize, mode='bilinear', align_corners=True)
                 gts = F.upsample(gts, size=trainsize, mode='bilinear', align_corners=True)
 
-            pred = generator(img=images)
-            loss_all = cal_loss(pred, gts, loss_fun)
+            pred = generator(img=images, depth=depth)
+            if option['task'].lower() == 'sod':
+                loss_all = cal_loss(pred, gts, loss_fun)
+            elif option['task'].lower() == 'weak-rgb-sod':
+                loss_all = loss_fun(images=images, outputs=pred, gt=gts, masks=mask, grays=gray)
 
             loss_all.backward()
             generator_optimizer.step()

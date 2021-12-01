@@ -10,7 +10,7 @@ parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'R
 parser.add_argument('--backbone', type=str, default='swin', choices=['swin', 'R50', 'dpt'])
 parser.add_argument('--decoder', type=str, default='cat', choices=['trans', 'rcab', 'simple', 'cat'])
 parser.add_argument('--fusion', type=str, default='early', choices=['early', 'late', 'rgb'])
-parser.add_argument('--loss', type=str, default='structure', choices=['structure', 'bce'])
+parser.add_argument('--loss', type=str, default='structure', choices=['structure', 'bce', 'weak'])
 parser.add_argument('--fusion_method', type=str, default='refine', choices=['refine', 'attention'])
 parser.add_argument('--uncer_method', type=str, default='basic', choices=['gan', 'vae', 'abp', 'ebm', 'basic', 'ganabp'])
 parser.add_argument('--training_path', type=str, default=None)
