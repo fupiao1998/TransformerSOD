@@ -39,6 +39,6 @@ def get_path_dict(hostname, task):
             path_dict['gt_root'] = '/home1/datasets/SOD_COD/Scribble_SOD/gt/'
             path_dict['mask_root'] = '/home1/datasets/SOD_COD/Scribble_SOD/mask/'
             path_dict['gray_root'] = '/home1/datasets/SOD_COD/Scribble_SOD/gray/'
-            path_dict['test_dataset_root'] = '/home1/datasets/SOD_COD/SOD_RGB/'
+            path_dict['test_dataset_root'] = '/home2/dataset/maoyuxin/SOD_COD/SOD_RGB/'
     
     return path_dict

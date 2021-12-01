@@ -40,7 +40,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 gts = F.upsample(gts, size=trainsize, mode='bilinear', align_corners=True)
 
             pred = generator(img=images, depth=depth)
-            if option['task'].lower() == 'sod':
+            if option['task'].lower() == 'sod' or option['task'].lower() == 'rgbd-sod' :
                 loss_all = cal_loss(pred, gts, loss_fun)
             elif option['task'].lower() == 'weak-rgb-sod':
                 loss_all = loss_fun(images=images, outputs=pred, gt=gts, masks=mask, grays=gray)

@@ -36,7 +36,7 @@ class Tester():
         self.test_epoch_num = option['checkpoint'].split('/')[-1].split('_')[0]
         self.model, self.uncertainty_model = get_model(option)
         self.model.load_state_dict(torch.load(option['checkpoint']))
-        self.model.train()
+        self.model.eval()
         if self.uncertainty_model is not None:
             self.uncertainty_model.load_state_dict(torch.load(option['checkpoint'].replace('generator', 'ebm_model')))
             self.uncertainty_model.eval()
@@ -46,7 +46,7 @@ class Tester():
         print('[INFO]: Save_path is', save_path)
         if not os.path.exists(save_path): 
             os.makedirs(save_path)
-        if self.option['task'] == 'SOD':
+        if self.option['task'] == 'SOD' or self.option['task'] == 'Weak-RGB-SOD':
             image_root = os.path.join(self.option['paths']['test_dataset_root'], 'Imgs', dataset)
             test_loader = test_dataset(image_root, option['testsize'])
         elif self.option['task'] == 'RGBD-SOD':
@@ -120,8 +120,10 @@ class Tester():
             if self.option['uncer_method'] == 'vae' or self.option['uncer_method'] == 'abp' or self.option['uncer_method'] == 'basic':
                 res = self.forward_a_sample(image, HH, WW, depth)
             elif self.option['uncer_method'] == 'ebm':
+                import pdb; pdb.set_trace()
                 res = self.forward_a_sample_ebm(image, HH, WW, depth)
             elif self.option['uncer_method'] == 'gan':
+                import pdb; pdb.set_trace()
                 res = self.forward_a_sample_gan(image, HH, WW, depth)
             torch.cuda.synchronize(); end = time.time()
             time_list.append(end-start)

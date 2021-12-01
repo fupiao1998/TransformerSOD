@@ -227,15 +227,18 @@ args = parser.parse_args()
 
 
 task = args.task
-if task == "SOD":
+if task.lower() == "sod":
     gt_dir = "/home/maoyuxin/dataset/SOD_COD/SOD_RGB/"
     test_datasets = ['DUTS', 'ECSSD', 'DUT', 'HKU-IS', 'PASCAL', 'SOD'] # ['DUTS', 'ECSSD', 'DUT', 'HKU-IS', 'THUR', 'SOC']
-elif task == "COD":
+elif task.lower() == "cod":
     gt_dir = "/home1/datasets/SOD_COD/COD/COD_test/"
     test_datasets = ['CAMO', 'CHAMELEON', 'COD10K', 'NC4K']
-elif task == "RGBD-SOD":
+elif task.lower() == "rgbd-sod":
     gt_dir = "/home1/datasets/SOD_COD/RGBD_SOD/test/"
     test_datasets = ['NJU2K', 'STERE', 'DES', 'NLPR', 'LFSD', 'SIP']
+else:
+    print('[ERROR]: Input wrong tasks, please check!')
+    exit()
 pred_dir = args.save_dir
 print('[INFO]: Process Task [{}] in Path [{}]'.format(task, pred_dir))
 
@@ -245,9 +248,9 @@ columns_pd = ['S_measure', 'F_measure', 'E_measure', 'MAE']
 
 for dataset in test_datasets:
     print("[INFO]: Process {} dataset".format(dataset))
-    if task == "SOD":
+    if task.lower() == "sod":
         loader = eval_Dataset(osp.join(pred_dir, dataset), osp.join(gt_dir, 'GT', dataset))
-    elif task == "RGBD-SOD" or task == "COD":
+    elif task.lower() == "rgbd-sod" or task.lower() == "cod":
         loader = eval_Dataset(osp.join(pred_dir, dataset), osp.join(gt_dir, dataset, 'GT'))
 
     def my_collate(batch):
@@ -266,7 +269,8 @@ for dataset in test_datasets:
     print(pd.DataFrame(data=np.reshape(measure_list, [1, len(measure_list)]), 
                        columns=columns_pd).to_string(index=False, float_format="%.5f"))
     results_list.append(measure_list)
-    latex_str_tmp = '&{:.3f} &{:.3f} &{:.3f} &{:.3f} '.format(S_measure, F_measure, E_measure, MAE)
+    latex_str_tmp = '&{} &{} &{} &{} '.format('.'+str(S_measure).split('.')[-1][:3], '.'+str(F_measure).split('.')[-1][:3], 
+                                              '.'+str(E_measure).split('.')[-1][:3], '.'+str(MAE).split('.')[-1][:3])
     latex_str += latex_str_tmp
     print(latex_str_tmp)
 
