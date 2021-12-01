@@ -46,7 +46,10 @@ class Tester():
         print('[INFO]: Save_path is', save_path)
         if not os.path.exists(save_path): 
             os.makedirs(save_path)
-        image_root = os.path.join(self.option['paths']['test_dataset_root'], 'Imgs', dataset)
+        if self.option['task'] == 'SOD':
+            image_root = os.path.join(self.option['paths']['test_dataset_root'], 'Imgs', dataset)
+        elif self.option['task'] == 'RGBD-SOD':
+            image_root = os.path.join(self.option['paths']['test_dataset_root'], dataset, 'RGB')
         test_loader = test_dataset(image_root, option['testsize'])
         return {'save_path': save_path, 'test_loader': test_loader}
 
@@ -129,25 +132,25 @@ tester = Tester(option=option)
 for dataset in option['datasets']:
     tester.test_one_detaset(dataset=dataset)
 
-# Begin to evaluate the saved masks
-mae_list = []
-print('========== Begin to evaluate the saved masks ==========')
-for dataset in tqdm(option['datasets']):
-    if option['task'] == 'RGBD-SOD' or option['task'] == 'COD':
-        gt_root = option['paths']['test_dataset_root'] + dataset + '/GT'
-    else:
-        gt_root = option['paths']['test_dataset_root'] + '/GT/' + dataset + '/'
+# # Begin to evaluate the saved masks
+# mae_list = []
+# print('========== Begin to evaluate the saved masks ==========')
+# for dataset in tqdm(option['datasets']):
+#     if option['task'] == 'RGBD-SOD' or option['task'] == 'COD':
+#         gt_root = option['paths']['test_dataset_root'] + dataset + '/GT'
+#     else:
+#         gt_root = option['paths']['test_dataset_root'] + '/GT/' + dataset + '/'
 
-    loader = eval_Dataset(os.path.join(option['eval_save_path'], '50_epoch', dataset), gt_root)
-    mae = eval_mae(loader=loader, cuda=True)
-    mae_list.append(mae.item())
+#     loader = eval_Dataset(os.path.join(option['eval_save_path'], '50_epoch', dataset), gt_root)
+#     mae = eval_mae(loader=loader, cuda=True)
+#     mae_list.append(mae.item())
 
-print('--------------- Results ---------------')
-results = np.array(mae_list)
-results = np.reshape(results, [1, len(results)])
-mae_table = pd.DataFrame(data=results, columns=option['datasets'])
-# import pdb; pdb.set_trace()
-with open(os.path.join(option['eval_save_path'], '50_epoch', 'results.csv'), 'w') as f:
-    mae_table.to_csv(f, index=False, float_format="%.4f")
-print(mae_table.to_string(index=False))
-print('--------------- Results ---------------')
+# print('--------------- Results ---------------')
+# results = np.array(mae_list)
+# results = np.reshape(results, [1, len(results)])
+# mae_table = pd.DataFrame(data=results, columns=option['datasets'])
+# # import pdb; pdb.set_trace()
+# with open(os.path.join(option['eval_save_path'], '50_epoch', 'results.csv'), 'w') as f:
+#     mae_table.to_csv(f, index=False, float_format="%.4f")
+# print(mae_table.to_string(index=False))
+# print('--------------- Results ---------------')
