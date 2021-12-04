@@ -49,7 +49,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
 
             z_noise = torch.randn(images.shape[0], opt.latent_dim).cuda()
             pred = generator(img=images, z=z_noise)
-            Dis_output = discriminator(torch.cat((images, pred[0].detach()), 1))
+            Dis_output = discriminator(torch.cat((images, torch.sigmoid(pred[0]).detach()), 1))
             up_size = (images.shape[2], images.shape[3])
             Dis_output = F.upsample(Dis_output, size=up_size, mode='bilinear', align_corners=True)
             
@@ -66,8 +66,8 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
             Dis_output = F.upsample(torch.sigmoid(Dis_output), size=up_size, mode='bilinear', align_corners=True)
             Dis_target = F.upsample(torch.sigmoid(Dis_target), size=up_size, mode='bilinear', align_corners=True)
 
-            loss_dis_output = CE(Dis_output, make_dis_label(opt.pred_label, gts))
-            loss_dis_target = CE(Dis_target, make_dis_label(opt.gt_label, gts))
+            loss_dis_output = CE(torch.sigmoid(Dis_output), make_dis_label(opt.pred_label, gts))
+            loss_dis_target = CE(torch.sigmoid(Dis_target), make_dis_label(opt.gt_label, gts))
             dis_loss = 0.5 * (loss_dis_output + loss_dis_target)
             dis_loss.backward()
             discriminator_optimizer.step()

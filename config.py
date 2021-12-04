@@ -30,7 +30,7 @@ epoch_dict = {'SOD': 50, 'RGBD-SOD': 100, 'Weak-RGB-SOD': 30}
 decay_dict = {'SOD': 20, 'RGBD-SOD': 40, 'Weak-RGB-SOD': 12}
 param['epoch'] = epoch_dict[param['task']]
 param['seed'] = 1234
-param['batch_size'] = 4 if param['task']=='Weak-RGB-SOD' else 8       # 批大小
+param['batch_size'] = 6 if param['task']=='Weak-RGB-SOD' else 12       # 批大小
 param['save_epoch'] = 5
 param['lr_config'] = {'beta': [0.5, 0.999], 'lr': 2.5e-5, 'lr_dis': 1e-5, 
                       'decay_rate': 0.5, 'decay_epoch': decay_dict[param['task']], 'gamma': 0.98}
