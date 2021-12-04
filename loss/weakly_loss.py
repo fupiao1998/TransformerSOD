@@ -10,6 +10,7 @@ class weakly_loss():
         self.lsc_kernels = [{"weight": 1, "xy": 6, "rgb": 0.1}]
         self.cross_entropy = torch.nn.BCELoss()
         self.lamda = [1, 0.3, 1]
+        print('[INFO]: Weakly loss params [{}]'.format(self.lamda))
 
     def __call__(self, images, outputs, gt, masks, grays):
         img_size = images.size(2) * images.size(3) * images.size(0)

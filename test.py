@@ -37,9 +37,9 @@ class Tester():
         self.model, self.uncertainty_model = get_model(option)
         self.model.load_state_dict(torch.load(option['checkpoint']))
         self.model.eval()
-        if self.uncertainty_model is not None:
-            self.uncertainty_model.load_state_dict(torch.load(option['checkpoint'].replace('generator', 'ebm_model')))
-            self.uncertainty_model.eval()
+        # if self.uncertainty_model is not None:
+        #     self.uncertainty_model.load_state_dict(torch.load(option['checkpoint'].replace('generator', 'ebm_model')))
+        #     self.uncertainty_model.eval()
 
     def prepare_test_params(self, dataset):
         save_path = os.path.join(option['eval_save_path'], self.test_epoch_num+'_epoch', dataset)
@@ -63,7 +63,7 @@ class Tester():
         
         return res
 
-    def forward_a_sample_gan(self, image, HH, WW):
+    def forward_a_sample_gan(self, image, HH, WW, depth):
         z_noise = torch.randn(image.shape[0], 32).cuda()
         res = self.model.forward(img=image, z=z_noise)[-1]  # Inference and get the last one of the output list
         res = F.upsample(res, size=[WW, HH], mode='bilinear', align_corners=False)
@@ -122,8 +122,8 @@ class Tester():
             elif self.option['uncer_method'] == 'ebm':
                 import pdb; pdb.set_trace()
                 res = self.forward_a_sample_ebm(image, HH, WW, depth)
-            elif self.option['uncer_method'] == 'gan':
-                import pdb; pdb.set_trace()
+            elif self.option['uncer_method'] == 'gan' or self.option['uncer_method'] == 'ganabp':
+                # import pdb; pdb.set_trace()
                 res = self.forward_a_sample_gan(image, HH, WW, depth)
             torch.cuda.synchronize(); end = time.time()
             time_list.append(end-start)

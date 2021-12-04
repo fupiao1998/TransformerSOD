@@ -54,7 +54,7 @@ param['fusion_method'] = args.fusion_method
 param['uncer_method'] = args.uncer_method   # gan, vae, abp, ebm
 param['vae_config'] = {'reg_weight': 1e-4, 'lat_weight': 1, 'vae_loss_weight': 0.4, 'latent_dim': 8}
 param['gan_config'] = {'pred_label': 0, 'gt_label': 1, 'latent_dim': 32}
-param['abp_config'] = {'step_num': 3, 'sigma_gen': 0.3, 'langevin_s': 0.1, 'latent_dim': 32}
+param['abp_config'] = {'step_num': 5, 'sigma_gen': 0.3, 'langevin_s': 0.1, 'latent_dim': 32}
 param['ebm_config'] = {'ebm_out_dim': 1, 'ebm_middle_dim': 100, 'latent_dim': 32, 'e_init_sig': 1.0, 
                        'e_l_steps': 5, 'e_l_step_size': 0.4, 'e_prior_sig': 1.0, 'g_l_steps': 5,
                        'g_llhd_sigma': 0.3, 'g_l_step_size': 0.1, 'e_energy_form': 'identity'}
@@ -100,7 +100,10 @@ if args.ckpt is not None:
         model_path = os.path.join(param['log_path'], 'models')
         model_list = os.listdir(model_path)
         model_list.sort(key=lambda x:int(x.split('_')[0]))
-        param['checkpoint'] = os.path.join(model_path, model_list[-1])
+        if 'generator' in model_list[-1]:
+            param['checkpoint'] = os.path.join(model_path, model_list[-1])
+        elif 'discriminator' in model_list[-1]:
+            param['checkpoint'] = os.path.join(model_path, model_list[-2])
     else:
         param['checkpoint'] = args.ckpt
 else:
