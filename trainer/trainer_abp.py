@@ -68,14 +68,14 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 z_noise_preds[kk + 1] = z_noise
 
             z_noise_ref = z_noise_preds[-1]
-            z_noise_init = z_noise_preds[0]
+            # z_noise_init = z_noise_preds[0]
 
-            pred_init = generator(images, z_noise_init, depth=depth)
+            # pred_init = generator(images, z_noise_init, depth=depth)
             pred_ref = generator(images, z_noise_ref, depth=depth)
 
             ## Caltulate loss
-            loss_init, loss_ref = cal_loss(pred_init, gts, loss_fun), cal_loss(pred_ref, gts, loss_fun)
-            supervised_loss = loss_init + loss_ref
+            # loss_init, loss_ref = cal_loss(pred_init, gts, loss_fun), cal_loss(pred_ref, gts, loss_fun)
+            supervised_loss = cal_loss(pred_ref, gts, loss_fun)
 
             supervised_loss.backward()
             generator_optimizer.step()
@@ -86,8 +86,8 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
 
             if rate == 1:
                 loss_record.update(supervised_loss.data, option['batch_size'])
-                supervised_loss_record.update(loss_init.data, option['batch_size'])
-                dis_loss_record.update(loss_ref.data, option['batch_size'])
+                supervised_loss_record.update(supervised_loss.data, option['batch_size'])
+                dis_loss_record.update(supervised_loss.data, option['batch_size'])
 
         progress_bar.set_postfix(loss=f'{loss_record.show():.3f}|{supervised_loss_record.show():.3f}|{dis_loss_record.show():.3f}')
 

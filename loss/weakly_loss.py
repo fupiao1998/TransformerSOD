@@ -9,7 +9,7 @@ class weakly_loss():
         self.smoothness_loss = smoothness_loss(size_average=True)
         self.lsc_kernels = [{"weight": 1, "xy": 6, "rgb": 0.1}]
         self.cross_entropy = torch.nn.BCELoss()
-        self.lamda = [1, 0.3, 1]
+        self.lamda = [1, 0, 1]
         print('[INFO]: Weakly loss params [{}]'.format(self.lamda))
 
     def __call__(self, images, outputs, gt, masks, grays):

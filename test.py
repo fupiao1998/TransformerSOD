@@ -41,8 +41,8 @@ class Tester():
         #     self.uncertainty_model.load_state_dict(torch.load(option['checkpoint'].replace('generator', 'ebm_model')))
         #     self.uncertainty_model.eval()
 
-    def prepare_test_params(self, dataset):
-        save_path = os.path.join(option['eval_save_path'], self.test_epoch_num+'_epoch', dataset)
+    def prepare_test_params(self, dataset, iter):
+        save_path = os.path.join(option['eval_save_path'], self.test_epoch_num+'_epoch_{}'.format(iter), dataset)
         print('[INFO]: Save_path is', save_path)
         if not os.path.exists(save_path): 
             os.makedirs(save_path)
@@ -107,8 +107,8 @@ class Tester():
         
         return res
 
-    def test_one_detaset(self, dataset):
-        test_params = self.prepare_test_params(dataset)
+    def test_one_detaset(self, dataset, iter):
+        test_params = self.prepare_test_params(dataset, iter)
         test_loader, save_path = test_params['test_loader'], test_params['save_path']
 
         time_list = []
@@ -117,17 +117,15 @@ class Tester():
             image = image.cuda()
             if depth is not None: depth = depth.cuda()
             torch.cuda.synchronize(); start = time.time()
-            if self.option['uncer_method'] == 'vae' or self.option['uncer_method'] == 'abp' or self.option['uncer_method'] == 'basic':
+            if self.option['uncer_method'] == 'vae' or self.option['uncer_method'] == 'basic':
                 res = self.forward_a_sample(image, HH, WW, depth)
             elif self.option['uncer_method'] == 'ebm':
                 import pdb; pdb.set_trace()
                 res = self.forward_a_sample_ebm(image, HH, WW, depth)
-            elif self.option['uncer_method'] == 'gan' or self.option['uncer_method'] == 'ganabp':
-                # import pdb; pdb.set_trace()
+            elif self.option['uncer_method'] == 'gan' or self.option['uncer_method'] == 'ganabp' or self.option['uncer_method'] == 'abp':
                 res = self.forward_a_sample_gan(image, HH, WW, depth)
             torch.cuda.synchronize(); end = time.time()
             time_list.append(end-start)
-
             cv2.imwrite(os.path.join(save_path, name), res)
             
         print('[INFO] Avg. Time used in this sequence: {:.4f}s'.format(np.mean(time_list)))
@@ -135,27 +133,33 @@ class Tester():
 
 tester = Tester(option=option)
 for dataset in option['datasets']:
-    tester.test_one_detaset(dataset=dataset)
+    for i in range(10):
+        tester.test_one_detaset(dataset=dataset, iter=i)
 
-# # Begin to evaluate the saved masks
-# mae_list = []
-# print('========== Begin to evaluate the saved masks ==========')
-# for dataset in tqdm(option['datasets']):
-#     if option['task'] == 'RGBD-SOD' or option['task'] == 'COD':
-#         gt_root = option['paths']['test_dataset_root'] + dataset + '/GT'
-#     else:
-#         gt_root = option['paths']['test_dataset_root'] + '/GT/' + dataset + '/'
+# Begin to evaluate the saved masks
+mae_list = []
+test_epoch_num = option['checkpoint'].split('/')[-1].split('_')[0]
+print('========== Begin to evaluate the saved masks ==========')
+for dataset in tqdm(option['datasets']):
+    if option['task'] == 'RGBD-SOD' or option['task'] == 'COD':
+        gt_root = option['paths']['test_dataset_root'] + dataset + '/GT'
+    else:
+        gt_root = option['paths']['test_dataset_root'] + '/GT/' + dataset + '/'
 
-#     loader = eval_Dataset(os.path.join(option['eval_save_path'], '50_epoch', dataset), gt_root)
-#     mae = eval_mae(loader=loader, cuda=True)
-#     mae_list.append(mae.item())
+    for i in range(10):
+        mae_single_dataset = []
+        loader = eval_Dataset(os.path.join(option['eval_save_path'], '{}_epoch_{}'.format(test_epoch_num, i), dataset), gt_root)
+        mae = eval_mae(loader=loader, cuda=True)
+        mae_single_dataset.append(mae.item())
+    
+    mae_list.append(np.mean(mae_single_dataset))
 
-# print('--------------- Results ---------------')
-# results = np.array(mae_list)
-# results = np.reshape(results, [1, len(results)])
-# mae_table = pd.DataFrame(data=results, columns=option['datasets'])
-# # import pdb; pdb.set_trace()
-# with open(os.path.join(option['eval_save_path'], '50_epoch', 'results.csv'), 'w') as f:
-#     mae_table.to_csv(f, index=False, float_format="%.4f")
-# print(mae_table.to_string(index=False))
-# print('--------------- Results ---------------')
+print('--------------- Results ---------------')
+results = np.array(mae_list)
+results = np.reshape(results, [1, len(results)])
+mae_table = pd.DataFrame(data=results, columns=option['datasets'])
+# import pdb; pdb.set_trace()
+with open(os.path.join(option['eval_save_path'], 'results_{}_epoch.csv'.format(test_epoch_num)), 'w') as f:
+    mae_table.to_csv(f, index=False, float_format="%.4f")
+print(mae_table.to_string(index=False))
+print('--------------- Results ---------------')

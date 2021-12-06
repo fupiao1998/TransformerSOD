@@ -220,6 +220,11 @@ def ssim(pred, gt):
     return Q
 
 
+def to_str(number):
+    str = '{:.3f}'.format(number)[1:]
+    
+    return str
+    
 parser = argparse.ArgumentParser(description='Decide Which Task to Training')
 parser.add_argument('--save_dir', type=str, default=None)
 parser.add_argument('--task', type=str, default='SOD')
@@ -228,13 +233,13 @@ args = parser.parse_args()
 
 task = args.task
 if task.lower() == "sod":
-    gt_dir = "/home/maoyuxin/dataset/SOD_COD/SOD_RGB/"
+    gt_dir = "/data/local_userdata/maoyuxin/SOD/SOD_COD/SOD_RGB/"
     test_datasets = ['DUTS', 'ECSSD', 'DUT', 'HKU-IS', 'PASCAL', 'SOD'] # ['DUTS', 'ECSSD', 'DUT', 'HKU-IS', 'THUR', 'SOC']
 elif task.lower() == "cod":
     gt_dir = "/home1/datasets/SOD_COD/COD/COD_test/"
     test_datasets = ['CAMO', 'CHAMELEON', 'COD10K', 'NC4K']
 elif task.lower() == "rgbd-sod":
-    gt_dir = "/home1/datasets/SOD_COD/RGBD_SOD/test/"
+    gt_dir = "/data/local_userdata/maoyuxin/SOD/SOD_COD/RGBD_SOD/test/"
     test_datasets = ['NJU2K', 'STERE', 'DES', 'NLPR', 'LFSD', 'SIP']
 else:
     print('[ERROR]: Input wrong tasks, please check!')
@@ -269,8 +274,8 @@ for dataset in test_datasets:
     print(pd.DataFrame(data=np.reshape(measure_list, [1, len(measure_list)]), 
                        columns=columns_pd).to_string(index=False, float_format="%.5f"))
     results_list.append(measure_list)
-    latex_str_tmp = '&{} &{} &{} &{} '.format('.'+str(S_measure).split('.')[-1][:3], '.'+str(F_measure).split('.')[-1][:3], 
-                                              '.'+str(E_measure).split('.')[-1][:3], '.'+str(MAE).split('.')[-1][:3])
+    latex_str_tmp = '&{} &{} &{} &{} '.format(to_str(S_measure), to_str(F_measure), 
+                                              to_str(E_measure), to_str(MAE))
     latex_str += latex_str_tmp
     print(latex_str_tmp)
 

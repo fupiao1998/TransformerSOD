@@ -58,7 +58,8 @@ param['abp_config'] = {'step_num': 5, 'sigma_gen': 0.3, 'langevin_s': 0.1, 'late
 param['ebm_config'] = {'ebm_out_dim': 1, 'ebm_middle_dim': 100, 'latent_dim': 32, 'e_init_sig': 1.0, 
                        'e_l_steps': 5, 'e_l_step_size': 0.4, 'e_prior_sig': 1.0, 'g_l_steps': 5,
                        'g_llhd_sigma': 0.3, 'g_l_step_size': 0.1, 'e_energy_form': 'identity'}
-param['ganabp_config'] = {'pred_label': 0, 'gt_label': 1, 'step_num': 5, 'sigma_gen': 0.3, 'langevin_s': 0.1, 'latent_dim': 32}
+param['ganabp_config'] = {'pred_label': 0, 'gt_label': 1, 'step_num': 5, 'sigma_gen': 0.3, 
+                          'langevin_s': 0.1, 'latent_dim': 32}
 param['basic_config'] = {'latent_dim': 32}   # Just for placeholder!!!
 param['latent_dim'] = param['{}_config'.format(param['uncer_method'])]['latent_dim']
 ##### uncertainty configs [work in process] #####
