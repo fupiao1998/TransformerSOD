@@ -29,8 +29,8 @@ def SSIM(x, y):
     return torch.clamp((1 - SSIM) / 2, 0, 1)
 
 
-def SaliencyStructureConsistency(x, y, alpha=0.3):
-    ssim = torch.mean(SSIM(x,y))
+def SaliencyStructureConsistency(x, y, alpha=0.85):
+    ssim = torch.mean(SSIM(x, y))
     l1_loss = torch.mean(torch.abs(x-y))
     loss_ssc = alpha*ssim + (1-alpha)*l1_loss
     return loss_ssc
@@ -49,5 +49,9 @@ def set_seed(seed):
     torch.backends.cudnn.deterministic = True
 
 
-
+def depth_loss(pred, target):
+    l1_loss = torch.abs(target - pred).sum(dim=1)
+    ssim_loss = SSIM(pred, target).sum(dim=1)
+    depth_loss = 0.85 * ssim_loss + 0.15 * l1_loss
+    return depth_loss.mean()
 

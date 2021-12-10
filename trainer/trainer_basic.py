@@ -8,6 +8,7 @@ from tqdm import tqdm
 from config import param as option
 from utils import AvgMeter, label_edge_prediction, visualize_list, make_dis_label
 from loss.get_loss import cal_loss
+from loss.StructureConsistency import depth_loss
 
 
 CE = torch.nn.BCELoss()
@@ -40,15 +41,17 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 gts = F.upsample(gts, size=trainsize, mode='bilinear', align_corners=True)
 
             pred = generator(img=images, depth=depth)
-            if option['task'].lower() == 'sod' or option['task'].lower() == 'rgbd-sod' :
-                loss_all = cal_loss(pred, gts, loss_fun)
+            if option['task'].lower() == 'sod':
+                loss_all = cal_loss(pred['sal_pre'], gts, loss_fun)
             elif option['task'].lower() == 'weak-rgb-sod':
-                loss_all = loss_fun(images=images, outputs=pred, gt=gts, masks=mask, grays=gray)
+                loss_all = loss_fun(images=images, outputs=pred['sal_pre'], gt=gts, masks=mask, grays=gray, model=generator)
+            elif option['task'].lower() == 'rgbd-sod':
+                loss_all = cal_loss(pred['sal_pre'], gts, loss_fun) + 0.5*depth_loss(torch.sigmoid(pred['depth_pre'][0]), depth)
 
             loss_all.backward()
             generator_optimizer.step()
 
-            result_list = [torch.sigmoid(x) for x in pred]
+            result_list = [torch.sigmoid(x) for x in pred['sal_pre']]
             result_list.append(gts)
             visualize_list(result_list, option['log_path'])
             del result_list

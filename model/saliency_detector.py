@@ -18,7 +18,7 @@ class sod_model(torch.nn.Module):
         self.backbone, self.channel_list = get_backbone(option)
         self.neck = get_neck(option, self.channel_list)
         self.decoder = get_decoder(option)
-        self.depth_module = get_depth_module(option)
+        self.depth_module = get_depth_module(option, self.channel_list)
         self.noise_model = noise_model(option)   # For abp
 
     def forward(self, img, z=None, gts=None, depth=None):
@@ -29,8 +29,11 @@ class sod_model(torch.nn.Module):
                 depth_features = self.depth_module['feature'](depth)
             elif 'rgb' in self.depth_module.keys():
                 img = img
-        
+
+        ## Backbone
         backbone_features = self.backbone(img)
+        
+        ## Neck
         neck_features = self.neck(backbone_features)
 
         if z is not None:
@@ -39,9 +42,13 @@ class sod_model(torch.nn.Module):
         if depth is not None and 'fusion' in self.depth_module.keys():
             neck_features = self.depth_module['fusion'](neck_features, depth_features)
 
+        ## Decoder
         outputs = self.decoder(neck_features)
-
-        return outputs
+        if depth is not None and 'aux_decoder' in self.depth_module.keys():
+            outputs_depth = self.depth_module['aux_decoder'](backbone_features)
+            return {'sal_pre': outputs, 'depth_pre': outputs_depth}
+        else:
+            return {'sal_pre': outputs, 'depth_pre': None}
 
 
 class sod_model_with_vae(torch.nn.Module):

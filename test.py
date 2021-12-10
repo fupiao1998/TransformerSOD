@@ -56,16 +56,18 @@ class Tester():
         return {'save_path': save_path, 'test_loader': test_loader}
 
     def forward_a_sample(self, image, HH, WW, depth=None):
-        res = self.model.forward(img=image, depth=depth)[-1]  # Inference and get the last one of the output list
+        res = self.model.forward(img=image, depth=depth)['sal_pre'][-1]
+        # Inference and get the last one of the output list
         res = F.upsample(res, size=[WW, HH], mode='bilinear', align_corners=False)
         res = res.sigmoid().data.cpu().numpy().squeeze()
         res = 255*(res - res.min()) / (res.max() - res.min() + 1e-8)
         
         return res
 
-    def forward_a_sample_gan(self, image, HH, WW, depth):
-        z_noise = torch.randn(image.shape[0], 32).cuda()
-        res = self.model.forward(img=image, z=z_noise)[-1]  # Inference and get the last one of the output list
+    def forward_a_sample_gan(self, image, HH, WW, depth=None):
+        z_noise = torch.randn(image.shape[0], self.option['latent_dim']).cuda()
+        res = self.model.forward(img=image, z=z_noise, depth=depth)['sal_pre'][-1]
+        # Inference and get the last one of the output list
         res = F.upsample(res, size=[WW, HH], mode='bilinear', align_corners=False)
         res = res.sigmoid().data.cpu().numpy().squeeze()
         res = 255*(res - res.min()) / (res.max() - res.min() + 1e-8)
@@ -131,9 +133,10 @@ class Tester():
         print('[INFO] Avg. Time used in this sequence: {:.4f}s'.format(np.mean(time_list)))
 
 
+iters = 1
 tester = Tester(option=option)
 for dataset in option['datasets']:
-    for i in range(10):
+    for i in range(iters):
         tester.test_one_detaset(dataset=dataset, iter=i)
 
 # Begin to evaluate the saved masks
@@ -146,7 +149,7 @@ for dataset in tqdm(option['datasets']):
     else:
         gt_root = option['paths']['test_dataset_root'] + '/GT/' + dataset + '/'
 
-    for i in range(10):
+    for i in range(iters):
         mae_single_dataset = []
         loader = eval_Dataset(os.path.join(option['eval_save_path'], '{}_epoch_{}'.format(test_epoch_num, i), dataset), gt_root)
         mae = eval_mae(loader=loader, cuda=True)

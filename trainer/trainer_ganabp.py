@@ -42,8 +42,8 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 images, gts, depth, index = pack['image'].cuda(), pack['gt'].cuda(), None, pack['index']
             elif len(pack) == 4:
                 images, gts, depth, index = pack['image'].cuda(), pack['gt'].cuda(), pack['depth'].cuda(), pack['index']
-            # elif len(pack) == 4:
-            #     images, gts, mask, gray = pack['image'].cuda(), pack['gt'].cuda(), pack['mask'].cuda(), pack['gray'].cuda()
+            elif len(pack) == 5:
+                images, gts, mask, gray, depth = pack['image'].cuda(), pack['gt'].cuda(), pack['mask'].cuda(), pack['gray'].cuda(), None
 
             # multi-scale training samples
             trainsize = (int(round(option['trainsize'] * rate / 32) * 32), int(round(option['trainsize'] * rate / 32) * 32))
@@ -58,7 +58,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 z_noise = Variable(z_noise_preds[kk], requires_grad=True).cuda()
                 noise = torch.randn(z_noise.size()).cuda()
 
-                gen_res = generator(img=images, z=z_noise, depth=depth)
+                gen_res = generator(img=images, z=z_noise, depth=depth)['sal_pre']
                 gen_loss = 0
                 for i in gen_res:
                     gen_loss += 1 / (2.0 * opt.sigma_gen * opt.sigma_gen) * F.mse_loss(torch.sigmoid(i), gts, size_average=True, reduction='sum')
@@ -70,14 +70,18 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 z_noise_preds[kk + 1] = z_noise
 
             z_noise_post = z_noise_preds[-1]
-            pred_post = generator(img=images, z=z_noise_post, depth=depth)
+            pred_post = generator(img=images, z=z_noise_post, depth=depth)['sal_pre']
 
             Dis_output = discriminator(torch.cat((images, torch.sigmoid(pred_post[0]).detach()), 1))
             up_size = (images.shape[2], images.shape[3])
             Dis_output = F.upsample(Dis_output, size=up_size, mode='bilinear', align_corners=True)
             
             loss_dis_output = CE(torch.sigmoid(Dis_output), make_dis_label(opt.gt_label, gts))
-            supervised_loss = cal_loss(pred_post, gts, loss_fun)
+            if option['task'].lower() == 'sod':
+                import pdb; pdb.set_trace()
+                supervised_loss = cal_loss(pred_post, gts, loss_fun)
+            elif option['task'].lower() == 'weak-rgb-sod':
+                supervised_loss = loss_fun(images=images, outputs=pred_post, gt=gts, masks=mask, grays=gray, model=generator)
             loss_all = supervised_loss + 0.1*loss_dis_output
             loss_all.backward()
             generator_optimizer.step()

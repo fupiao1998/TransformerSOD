@@ -397,7 +397,6 @@ class eval_Dataset(data.Dataset):
         if pred.size != gt.size:
             pred = pred.resize(gt.size, Image.BILINEAR)
 
-        
         return self.trans(pred), self.trans(gt)
 
     def __len__(self):

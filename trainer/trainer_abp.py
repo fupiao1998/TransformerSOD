@@ -10,6 +10,7 @@ from config import param as option
 from utils import AvgMeter, label_edge_prediction, visualize_list
 from loss.get_loss import cal_loss
 from utils import DotDict
+from loss.StructureConsistency import SaliencyStructureConsistency as SSIMLoss
 
 
 CE = torch.nn.BCELoss()
@@ -56,7 +57,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 z_noise = Variable(z_noise_preds[kk], requires_grad=True).cuda()
                 noise = torch.randn(z_noise.size()).cuda()
 
-                gen_res = generator(img=images, z=z_noise, depth=depth)
+                gen_res = generator(img=images, z=z_noise, depth=depth)['sal_pre']
                 gen_loss = 0
                 for i in gen_res:
                     gen_loss += 1 / (2.0 * opt.sigma_gen * opt.sigma_gen) * F.mse_loss(torch.sigmoid(i), gts, size_average=True, reduction='sum')
@@ -71,16 +72,17 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
             # z_noise_init = z_noise_preds[0]
 
             # pred_init = generator(images, z_noise_init, depth=depth)
-            pred_ref = generator(images, z_noise_ref, depth=depth)
+            pred = generator(img=images, z=z_noise_ref, depth=depth)
+            sal_pred = pred['sal_pre']
 
             ## Caltulate loss
             # loss_init, loss_ref = cal_loss(pred_init, gts, loss_fun), cal_loss(pred_ref, gts, loss_fun)
-            supervised_loss = cal_loss(pred_ref, gts, loss_fun)
+            supervised_loss = cal_loss(sal_pred, gts, loss_fun)
 
             supervised_loss.backward()
             generator_optimizer.step()
 
-            result_list = [torch.sigmoid(x) for x in pred_ref]
+            result_list = [torch.sigmoid(x) for x in sal_pred]
             result_list.append(gts)
             visualize_list(result_list, option['log_path'])
 

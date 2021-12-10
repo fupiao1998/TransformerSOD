@@ -29,6 +29,7 @@ def rot_trans(image, sal_list):
         grid = F.affine_grid(rot_mat, x.size()).type(input_type).cuda()
         x_out = F.grid_sample(x, grid)
         return x_out
+
     theta = random.choice((np.pi/2, -np.pi/2, np.pi))
     images_rot = rot_img(image, theta)
     sal_list_out = []

@@ -9,7 +9,7 @@ parser = argparse.ArgumentParser(description='Decide Which Task to Training')
 parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'RGBD-SOD', 'Weak-RGB-SOD'])
 parser.add_argument('--backbone', type=str, default='swin', choices=['swin', 'R50', 'dpt'])
 parser.add_argument('--decoder', type=str, default='cat', choices=['trans', 'rcab', 'simple', 'cat'])
-parser.add_argument('--fusion', type=str, default='early', choices=['early', 'late', 'rgb'])
+parser.add_argument('--fusion', type=str, default='early', choices=['early', 'late', 'rgb', 'aux'])
 parser.add_argument('--loss', type=str, default='structure', choices=['structure', 'bce', 'weak'])
 parser.add_argument('--fusion_method', type=str, default='refine', choices=['refine', 'attention'])
 parser.add_argument('--uncer_method', type=str, default='basic', choices=['gan', 'vae', 'abp', 'ebm', 'basic', 'ganabp'])
@@ -47,7 +47,7 @@ param['neck_channel'] = args.neck_channel
 param['backbone'] = args.backbone
 param['decoder'] = args.decoder
 # Depth Model
-param['fusion'] = args.fusion   # [early, late, cross, rgb]
+param['fusion'] = args.fusion   # [early, late, cross, rgb, aux]
 param['fusion_method'] = args.fusion_method
 
 ##### uncertainty configs [work in process] #####
@@ -118,4 +118,4 @@ elif param['task'] == 'SOD':
 elif param['task'] == 'Weak-RGB-SOD':
     param['datasets'] = ['DUTS', 'ECSSD', 'DUT', 'HKU-IS', 'PASCAL', 'SOD']
 elif param['task'] == 'RGBD-SOD':
-    param['datasets'] = ['NJU2K', 'STERE', 'DES', 'NLPR', 'LFSD', 'SIP']
+    param['datasets'] =  ['NJU2K', 'STERE', 'DES', 'NLPR', 'LFSD', 'SIP']  # ['NJU2K']   #

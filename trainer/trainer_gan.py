@@ -10,6 +10,7 @@ from config import param as option
 from utils import AvgMeter, label_edge_prediction, visualize_list, make_dis_label
 from loss.get_loss import cal_loss
 from utils import DotDict
+from loss.StructureConsistency import SaliencyStructureConsistency as SSIMLoss
 
 
 CE = torch.nn.BCELoss()
@@ -38,8 +39,8 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 images, gts, depth, index = pack['image'].cuda(), pack['gt'].cuda(), None, pack['index']
             elif len(pack) == 4:
                 images, gts, depth, index = pack['image'].cuda(), pack['gt'].cuda(), pack['depth'].cuda(), pack['index']
-            # elif len(pack) == 4:
-            #     images, gts, mask, gray = pack['image'].cuda(), pack['gt'].cuda(), pack['mask'].cuda(), pack['gray'].cuda()
+            elif len(pack) == 5:
+                images, gts, mask, gray, depth = pack['image'].cuda(), pack['gt'].cuda(), pack['mask'].cuda(), pack['gray'].cuda(), None
 
             # multi-scale training samples
             trainsize = (int(round(option['trainsize']*rate/32)*32), int(round(option['trainsize']*rate/32)*32))
@@ -48,19 +49,27 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 gts = F.upsample(gts, size=trainsize, mode='bilinear', align_corners=True)
 
             z_noise = torch.randn(images.shape[0], opt.latent_dim).cuda()
-            pred = generator(img=images, z=z_noise)
-            Dis_output = discriminator(torch.cat((images, torch.sigmoid(pred[0]).detach()), 1))
+            pred = generator(img=images, z=z_noise, depth=depth)
+            sal_pred = pred['sal_pre']
+            Dis_output = discriminator(torch.cat((images, torch.sigmoid(sal_pred[0]).detach()), 1))
             up_size = (images.shape[2], images.shape[3])
             Dis_output = F.upsample(Dis_output, size=up_size, mode='bilinear', align_corners=True)
             
             loss_dis_output = CE(torch.sigmoid(Dis_output), make_dis_label(opt.gt_label, gts))
-            supervised_loss = cal_loss(pred, gts, loss_fun)
+            
+            if option['task'].lower() == 'sod':
+                import pdb; pdb.set_trace()
+                supervised_loss = cal_loss(pred['sal_pre'], gts, loss_fun)
+            elif option['task'].lower() == 'weak-rgb-sod':
+                supervised_loss = loss_fun(images=images, outputs=pred['sal_pre'], gt=gts, masks=mask, grays=gray, model=generator)
+
             loss_all = supervised_loss + 0.1*loss_dis_output
+
             loss_all.backward()
             generator_optimizer.step()
 
             # train discriminator
-            dis_pred = torch.sigmoid(pred[0]).detach()
+            dis_pred = torch.sigmoid(sal_pred[0]).detach()
             Dis_output = discriminator(torch.cat((images, dis_pred), 1))
             Dis_target = discriminator(torch.cat((images, gts), 1))
             Dis_output = F.upsample(torch.sigmoid(Dis_output), size=up_size, mode='bilinear', align_corners=True)
@@ -72,7 +81,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
             dis_loss.backward()
             discriminator_optimizer.step()
 
-            result_list = [torch.sigmoid(x) for x in pred]
+            result_list = [torch.sigmoid(x) for x in sal_pred]
             result_list.append(gts)
             visualize_list(result_list, option['log_path'])
 

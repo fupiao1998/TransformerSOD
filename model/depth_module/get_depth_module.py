@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 
-def get_depth_module(option):
+def get_depth_module(option, in_channel_list):
     depth_module = nn.ModuleDict()
     if option['task'].lower() != 'rgbd-sod':
         depth_module = None
@@ -16,5 +16,10 @@ def get_depth_module(option):
             depth_module['fusion'] = feature_fusion(option=option)
         elif option['fusion'].lower() == 'rgb':
             depth_module['rgb'] = nn.ModuleList()
+        elif option['fusion'].lower() == 'aux':
+            from model.decoder.concat_decoder import concat_decoder
+            from model.neck.neck import basic_neck
+            depth_module['aux_decoder'] = nn.Sequential(basic_neck(in_channel_list, option['neck_channel']),
+                                                        concat_decoder(option=option))
 
     return depth_module
