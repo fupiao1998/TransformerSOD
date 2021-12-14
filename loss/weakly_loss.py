@@ -6,12 +6,12 @@ from img_trans import rot_trans
 
 
 class weakly_loss():
-    def __init__(self):
+    def __init__(self, option):
         self.lsc_loss = LocalSaliencyCoherence()
         self.smoothness_loss = smoothness_loss(size_average=True)
         self.lsc_kernels = [{"weight": 1, "xy": 6, "rgb": 0.1}]
         self.cross_entropy = torch.nn.BCELoss()
-        self.lamda = [1, 0.3, 1]
+        self.lamda = option['grid_search_lamda']
         print('[INFO]: Weakly loss params [{}]'.format(self.lamda))
 
     def __call__(self, images, outputs, gt, masks, grays, model=None):
@@ -33,6 +33,6 @@ class weakly_loss():
             images_rot, outputs_rot = rot_trans(images, outputs)
             outputs_reference = model(img=images_rot.detach())['sal_pre']
             consist_loss = ConsistLoss(torch.sigmoid(outputs_rot[0]), torch.sigmoid(outputs_reference[0]))
-            loss = loss + consist_loss
+            loss = loss + self.lamda[3]*consist_loss
 
         return loss

@@ -41,8 +41,8 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 images, gts, depth, index = pack['image'].cuda(), pack['gt'].cuda(), None, pack['index']
             elif len(pack) == 4:
                 images, gts, depth, index = pack['image'].cuda(), pack['gt'].cuda(), pack['depth'].cuda(), pack['index']
-            # elif len(pack) == 4:
-            #     images, gts, mask, gray = pack['image'].cuda(), pack['gt'].cuda(), pack['mask'].cuda(), pack['gray'].cuda()
+            elif len(pack) == 5:
+                images, gts, mask, gray, index, depth = pack['image'].cuda(), pack['gt'].cuda(), pack['mask'].cuda(), pack['gray'].cuda(), pack['index'], None
 
             # multi-scale training samples
             trainsize = (int(round(option['trainsize'] * rate / 32) * 32), int(round(option['trainsize'] * rate / 32) * 32))
@@ -77,7 +77,10 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
 
             ## Caltulate loss
             # loss_init, loss_ref = cal_loss(pred_init, gts, loss_fun), cal_loss(pred_ref, gts, loss_fun)
-            supervised_loss = cal_loss(sal_pred, gts, loss_fun)
+            if option['task'].lower() == 'sod':
+                supervised_loss = cal_loss(sal_pred, gts, loss_fun)
+            elif option['task'].lower() == 'weak-rgb-sod':
+                supervised_loss = loss_fun(images=images, outputs=sal_pred, gt=gts, masks=mask, grays=gray, model=generator)
 
             supervised_loss.backward()
             generator_optimizer.step()

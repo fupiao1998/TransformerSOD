@@ -15,7 +15,7 @@ def get_loss(option):
     elif option['loss'] == 'bce':
         loss_fun = bce_loss_with_sigmoid
     elif option['loss'] == 'weak':
-        loss_fun = weakly_loss()
+        loss_fun = weakly_loss(option)
 
     return loss_fun
 

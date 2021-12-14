@@ -19,6 +19,7 @@ parser.add_argument('--neck_channel', type=int, default=32)
 parser.add_argument('--ckpt', type=str, default=None)
 parser.add_argument('--confiednce_learning', action='store_true')
 parser.add_argument('--use_22k', action='store_true')
+parser.add_argument('--grid_search_lamda', type=str, default='1,0.3,1,1.2')
 args = parser.parse_args()
 
 ## Configs
@@ -71,10 +72,7 @@ else:
 param['confiednce_learning'] = args.confiednce_learning
 
 # Model Config
-param['use_attention'] = False
-param['scale_trans_radio'] = 0  # Default 0.5
-param['rot_trans_radio'] = 0    # Default 0.5
-
+param['grid_search_lamda'] = [float(x) for x in args.grid_search_lamda.split(',')]
 # Backbone Config
 param['model_name'] = '{}_{}_{}_{}'.format(param['backbone'], param['neck'], 
                                            param['decoder'], param['uncer_method'])
