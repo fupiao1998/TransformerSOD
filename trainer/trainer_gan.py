@@ -51,7 +51,11 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
             z_noise = torch.randn(images.shape[0], opt.latent_dim).cuda()
             pred = generator(img=images, z=z_noise, depth=depth)
             sal_pred = pred['sal_pre']
-            Dis_output = discriminator(torch.cat((images, torch.sigmoid(sal_pred[0]).detach()), 1))
+            if option['task'].lower() == 'sod':
+                Dis_output = discriminator(torch.cat((images, torch.sigmoid(sal_pred[0]).detach()), 1))
+            elif option['task'].lower() == 'weak-rgb-sod':
+                Dis_output = discriminator(torch.cat((images, mask*torch.sigmoid(sal_pred[0]).detach()), 1))
+
             up_size = (images.shape[2], images.shape[3])
             Dis_output = F.upsample(Dis_output, size=up_size, mode='bilinear', align_corners=True)
             
@@ -70,7 +74,10 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
 
             # train discriminator
             dis_pred = torch.sigmoid(sal_pred[0]).detach()
-            Dis_output = discriminator(torch.cat((images, dis_pred), 1))
+            if option['task'].lower() == 'sod':
+                Dis_output = discriminator(torch.cat((images, dis_pred), 1))
+            elif option['task'].lower() == 'weak-rgb-sod':
+                Dis_output = discriminator(torch.cat((images, mask*dis_pred), 1))
             Dis_target = discriminator(torch.cat((images, gts), 1))
             Dis_output = F.upsample(torch.sigmoid(Dis_output), size=up_size, mode='bilinear', align_corners=True)
             Dis_target = F.upsample(torch.sigmoid(Dis_target), size=up_size, mode='bilinear', align_corners=True)

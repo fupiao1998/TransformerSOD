@@ -8,7 +8,8 @@ hostname = socket.getfqdn(socket.gethostname(  ))
 parser = argparse.ArgumentParser(description='Decide Which Task to Training')
 parser.add_argument('--task', type=str, default='SOD', choices=['COD', 'SOD', 'RGBD-SOD', 'Weak-RGB-SOD'])
 parser.add_argument('--backbone', type=str, default='swin', choices=['swin', 'R50', 'dpt'])
-parser.add_argument('--decoder', type=str, default='cat', choices=['trans', 'rcab', 'simple', 'cat'])
+parser.add_argument('--neck', type=str, default='basic', choices=['basic', 'aspp'])
+parser.add_argument('--decoder', type=str, default='cat', choices=['trans', 'rcab', 'simple', 'cat', 'cat_deep'])
 parser.add_argument('--fusion', type=str, default='early', choices=['early', 'late', 'rgb', 'aux'])
 parser.add_argument('--loss', type=str, default='structure', choices=['structure', 'bce', 'weak'])
 parser.add_argument('--fusion_method', type=str, default='refine', choices=['refine', 'attention'])
@@ -42,7 +43,7 @@ param['size_rates'] = [1]
 
 ## Model Config
 # RGB Model
-param['neck'] = 'basic'
+param['neck'] = args.neck
 param['deep_sup'] = False
 param['neck_channel'] = args.neck_channel
 param['backbone'] = args.backbone

@@ -60,7 +60,10 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 gen_res = generator(img=images, z=z_noise, depth=depth)['sal_pre']
                 gen_loss = 0
                 for i in gen_res:
-                    gen_loss += 1 / (2.0 * opt.sigma_gen * opt.sigma_gen) * F.mse_loss(torch.sigmoid(i), gts, size_average=True, reduction='sum')
+                    if option['task'].lower() == 'weak-rgb-sod':
+                        gen_loss += 1 / (2.0 * opt.sigma_gen * opt.sigma_gen) * F.mse_loss(torch.sigmoid(i)*mask, gts*mask, size_average=True, reduction='sum')
+                    else:
+                        gen_loss += 1 / (2.0 * opt.sigma_gen * opt.sigma_gen) * F.mse_loss(torch.sigmoid(i), gts, size_average=True, reduction='sum')
                 gen_loss.backward(torch.ones(gen_loss.size()).cuda())
 
                 grad = z_noise.grad
@@ -68,10 +71,8 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 z_noise += opt.langevin_s * noise
                 z_noise_preds[kk + 1] = z_noise
 
-            z_noise_ref = z_noise_preds[-1]
-            # z_noise_init = z_noise_preds[0]
-
-            # pred_init = generator(images, z_noise_init, depth=depth)
+            z_noise_ref = z_noise
+            
             pred = generator(img=images, z=z_noise_ref, depth=depth)
             sal_pred = pred['sal_pre']
 

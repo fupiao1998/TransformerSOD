@@ -61,7 +61,10 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 gen_res = generator(img=images, z=z_noise, depth=depth)['sal_pre']
                 gen_loss = 0
                 for i in gen_res:
-                    gen_loss += 1 / (2.0 * opt.sigma_gen * opt.sigma_gen) * F.mse_loss(torch.sigmoid(i), gts, size_average=True, reduction='sum')
+                    if option['task'].lower() == 'weak-rgb-sod':
+                        gen_loss += 1 / (2.0 * opt.sigma_gen * opt.sigma_gen) * F.mse_loss(torch.sigmoid(i)*mask, gts*mask, size_average=True, reduction='sum')
+                    else:
+                        gen_loss += 1 / (2.0 * opt.sigma_gen * opt.sigma_gen) * F.mse_loss(torch.sigmoid(i), gts, size_average=True, reduction='sum')
                 gen_loss.backward(torch.ones(gen_loss.size()).cuda())
 
                 grad = z_noise.grad
@@ -72,13 +75,16 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
             z_noise_post = z_noise_preds[-1]
             pred_post = generator(img=images, z=z_noise_post, depth=depth)['sal_pre']
 
-            Dis_output = discriminator(torch.cat((images, torch.sigmoid(pred_post[0]).detach()), 1))
+            if option['task'].lower() == 'sod':
+                Dis_output = discriminator(torch.cat((images, torch.sigmoid(pred_post[0]).detach()), 1))
+            elif option['task'].lower() == 'weak-rgb-sod':
+                Dis_output = discriminator(torch.cat((images, mask*torch.sigmoid(pred_post[0]).detach()), 1))
+
             up_size = (images.shape[2], images.shape[3])
             Dis_output = F.upsample(Dis_output, size=up_size, mode='bilinear', align_corners=True)
             
             loss_dis_output = CE(torch.sigmoid(Dis_output), make_dis_label(opt.gt_label, gts))
             if option['task'].lower() == 'sod':
-                import pdb; pdb.set_trace()
                 supervised_loss = cal_loss(pred_post, gts, loss_fun)
             elif option['task'].lower() == 'weak-rgb-sod':
                 supervised_loss = loss_fun(images=images, outputs=pred_post, gt=gts, masks=mask, grays=gray, model=generator)
@@ -88,7 +94,11 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
 
             # train discriminator
             dis_pred = torch.sigmoid(pred_post[0]).detach()
-            Dis_output = discriminator(torch.cat((images, dis_pred), 1))
+            if option['task'].lower() == 'sod':
+                Dis_output = discriminator(torch.cat((images, dis_pred), 1))
+            elif option['task'].lower() == 'weak-rgb-sod':
+                Dis_output = discriminator(torch.cat((images, mask*dis_pred), 1))
+
             Dis_target = discriminator(torch.cat((images, gts), 1))
             Dis_output = F.upsample(torch.sigmoid(Dis_output), size=up_size, mode='bilinear', align_corners=True)
             Dis_target = F.upsample(torch.sigmoid(Dis_target), size=up_size, mode='bilinear', align_corners=True)

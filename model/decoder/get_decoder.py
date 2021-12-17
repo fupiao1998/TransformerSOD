@@ -8,6 +8,9 @@ def get_decoder(option):
     elif option['decoder'].lower() == 'cat':
         from model.decoder.concat_decoder import concat_decoder
         decoder = concat_decoder(option)
+    elif option['decoder'].lower() == 'cat_deep':
+        from model.decoder.concat_decoder_deep_sup import concat_decoder_deep_sup
+        decoder = concat_decoder_deep_sup(option)
     elif option['decoder'].lower() == 'trans':
         vit_params = {}
         vit_params['embed_dim'] = option['neck_channel']
