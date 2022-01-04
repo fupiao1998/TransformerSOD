@@ -21,6 +21,7 @@ parser.add_argument('--ckpt', type=str, default=None)
 parser.add_argument('--confiednce_learning', action='store_true')
 parser.add_argument('--use_22k', action='store_true')
 parser.add_argument('--grid_search_lamda', type=str, default='1,0.3,1,1.2')
+parser.add_argument('--lamda_dis', type=float, default=0.1)
 args = parser.parse_args()
 
 ## Configs
@@ -44,7 +45,7 @@ param['size_rates'] = [1]
 ## Model Config
 # RGB Model
 param['neck'] = args.neck
-param['deep_sup'] = False
+param['deep_sup'] = True
 param['neck_channel'] = args.neck_channel
 param['backbone'] = args.backbone
 param['decoder'] = args.decoder
@@ -61,7 +62,7 @@ param['ebm_config'] = {'ebm_out_dim': 1, 'ebm_middle_dim': 100, 'latent_dim': 32
                        'e_l_steps': 5, 'e_l_step_size': 0.4, 'e_prior_sig': 1.0, 'g_l_steps': 5,
                        'g_llhd_sigma': 0.3, 'g_l_step_size': 0.1, 'e_energy_form': 'identity'}
 param['ganabp_config'] = {'pred_label': 0, 'gt_label': 1, 'step_num': 5, 'sigma_gen': 0.3, 
-                          'langevin_s': 0.1, 'latent_dim': 32}
+                          'langevin_s': 0.1, 'latent_dim': 18, 'lamda_dis': args.lamda_dis}
 param['basic_config'] = {'latent_dim': 32}   # Just for placeholder!!!
 param['latent_dim'] = param['{}_config'.format(param['uncer_method'])]['latent_dim']
 ##### uncertainty configs [work in process] #####

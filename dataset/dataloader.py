@@ -401,3 +401,50 @@ class eval_Dataset(data.Dataset):
 
     def __len__(self):
         return len(self.image_path)
+    
+    
+class eval_Dataset_with_name(data.Dataset):
+    def __init__(self, img_root_t, img_root_c, label_root):
+        lst_label, lst_pred_t, lst_pred_c = sorted(os.listdir(label_root)), sorted(os.listdir(img_root_t)), sorted(os.listdir(img_root_c))
+        self.label_abbr, self.pred_abbr_t, self.pred_abbr_c = lst_label[0].split('.')[-1], lst_pred_t[0].split('.')[-1], lst_pred_c[0].split('.')[-1]
+        label_list, pred_t_list, pred_c_list = [], [], []
+        for name in lst_label:
+            label_name = name.split('.')[0]
+            if label_name+'.'+self.label_abbr in lst_label:
+                label_list.append(name)
+    
+        for name in lst_pred_t:
+            label_name = name.split('.')[0]
+            if label_name+'.'+self.pred_abbr_t in lst_pred_t:
+                pred_t_list.append(name)
+                
+        for name in lst_pred_t:
+            label_name = name.split('.')[0]
+            if label_name+'.'+self.pred_abbr_c in lst_pred_t:
+                pred_c_list.append(name)
+
+        self.image_t_path = list(map(lambda x: os.path.join(img_root_t, x), pred_t_list))
+        self.image_c_path = list(map(lambda x: os.path.join(img_root_c, x), pred_c_list))
+        self.label_path = list(map(lambda x: os.path.join(label_root, x), label_list))
+        self.trans = transforms.Compose([transforms.ToTensor()])
+
+    def get_img_pil(self, path):
+        img = Image.open(path).convert('L')
+        return img
+
+    def __getitem__(self, item):
+        img_t_path = self.image_t_path[item]
+        img_c_path = self.image_c_path[item]
+        label_path = self.label_path[item]
+        pred_t = self.get_img_pil(img_t_path)  # (500, 375)
+        pred_c = self.get_img_pil(img_c_path)  # (500, 375)
+        gt = self.get_img_pil(label_path)
+        if pred_t.size != gt.size:
+            pred_t = pred_t.resize(gt.size, Image.BILINEAR)
+            pred_c = pred_c.resize(gt.size, Image.BILINEAR)
+        name = '{}/{}'.format(img_t_path.split('/')[-2], img_t_path.split('/')[-1])
+
+        return self.trans(pred_t), self.trans(pred_c), self.trans(gt), name
+
+    def __len__(self):
+        return len(self.image_path)

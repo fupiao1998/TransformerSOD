@@ -17,7 +17,7 @@ def calculate(img_list):
 
 
 dataset_list = ['DUT', 'DUTS', 'ECSSD', 'HKU-IS', 'PASCAL', 'SOD']
-root = 'experiments/SOD_2.5e-05_R50_basic_cat_abp_baseline/save_images'
+root = 'experiments/SOD_2.5e-05_swin_basic_cat_ganabp_[lamda_dis_0.2]/save_images'
 for dataset in dataset_list:    
     name_list = os.listdir(os.path.join(root, '50_epoch_0', dataset))
     print('[INFO]: Process [{}]'.format(dataset))

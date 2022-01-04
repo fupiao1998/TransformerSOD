@@ -22,6 +22,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
     opt.langevin_s = option['ganabp_config']['langevin_s']
     opt.pred_label = option['ganabp_config']['pred_label']
     opt.gt_label = option['ganabp_config']['gt_label']
+    opt.lamda_dis = option['ganabp_config']['lamda_dis']
     train_z = torch.FloatTensor(dataset_size, opt.latent_dim).normal_(0, 1).cuda()
     ## Setup abp params
 
@@ -88,7 +89,7 @@ def train_one_epoch(epoch, model_list, optimizer_list, train_loader, dataset_siz
                 supervised_loss = cal_loss(pred_post, gts, loss_fun)
             elif option['task'].lower() == 'weak-rgb-sod':
                 supervised_loss = loss_fun(images=images, outputs=pred_post, gt=gts, masks=mask, grays=gray, model=generator)
-            loss_all = supervised_loss + 0.1*loss_dis_output
+            loss_all = supervised_loss + opt.lamda_dis * loss_dis_output
             loss_all.backward()
             generator_optimizer.step()
 
