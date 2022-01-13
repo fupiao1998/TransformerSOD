@@ -38,9 +38,9 @@ If you need to train other settings, you can modify the corresponding configurat
 
 The above command means to train a SOD task model that uses IGAN as the uncertainty model and swin transformer as the backbone.
 
-### 测试
+### Testing
 With the configuration file set up, run ```python test.py --ckpt [ckpt_path]``` directly to output the saliency map and evaluate the corresponding MAE.
-### 显著性图
+### Saliency map
 For ease of comparison, we provide the saliency map output by the model under various experimental settings, which can be downloaded from this [link] 。
 ## BIB
 If you think our code is helpful for your research, please cite:
@@ -52,7 +52,7 @@ If you think our code is helpful for your research, please cite:
   year={2021}
 }
 ```
-## 联系
+## Concat
 If you think there is a problem to discuss, please contact me via issue on github or my email :maoyuxin@mail.nwpu.edu.cn.
 
 At the same time, we hope that our framework can include more transformer-based work for SOD tasks, so please stay tuned for our updates. Pulling requests are also welcome!
