@@ -447,4 +447,4 @@ class eval_Dataset_with_name(data.Dataset):
         return self.trans(pred_t), self.trans(pred_c), self.trans(gt), name
 
     def __len__(self):
-        return len(self.image_path)
+        return len(self.image_t_path)

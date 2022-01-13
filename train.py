@@ -13,6 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 if __name__ == "__main__":
     # Begin the training process
+    print('[INFO] Experiments saved in: ', option['training_info'])
     set_seed(option['seed'])
     train_one_epoch = get_trainer(option)
     loss_fun = get_loss(option)

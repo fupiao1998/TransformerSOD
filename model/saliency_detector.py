@@ -46,9 +46,9 @@ class sod_model(torch.nn.Module):
         outputs = self.decoder(neck_features)
         if depth is not None and 'aux_decoder' in self.depth_module.keys():
             outputs_depth = self.depth_module['aux_decoder'](backbone_features)
-            return {'sal_pre': outputs, 'depth_pre': outputs_depth}
+            return {'sal_pre': outputs, 'depth_pre': outputs_depth, 'backbone_features':backbone_features}
         else:
-            return {'sal_pre': outputs, 'depth_pre': None}
+            return {'sal_pre': outputs, 'depth_pre': None, 'backbone_features':backbone_features}
 
 
 class sod_model_with_vae(torch.nn.Module):

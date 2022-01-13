@@ -11,14 +11,11 @@ parser.add_argument('--backbone', type=str, default='swin', choices=['swin', 'R5
 parser.add_argument('--neck', type=str, default='basic', choices=['basic', 'aspp'])
 parser.add_argument('--decoder', type=str, default='cat', choices=['trans', 'rcab', 'simple', 'cat', 'cat_deep'])
 parser.add_argument('--fusion', type=str, default='early', choices=['early', 'late', 'rgb', 'aux'])
-parser.add_argument('--loss', type=str, default='structure', choices=['structure', 'bce', 'weak'])
-parser.add_argument('--fusion_method', type=str, default='refine', choices=['refine', 'attention'])
 parser.add_argument('--uncer_method', type=str, default='basic', choices=['gan', 'vae', 'abp', 'ebm', 'basic', 'ganabp'])
 parser.add_argument('--training_path', type=str, default=None)
 parser.add_argument('--log_info', type=str, default='REMOVE')
 parser.add_argument('--neck_channel', type=int, default=32)
 parser.add_argument('--ckpt', type=str, default=None)
-parser.add_argument('--confiednce_learning', action='store_true')
 parser.add_argument('--use_22k', action='store_true')
 parser.add_argument('--grid_search_lamda', type=str, default='1,0.3,1,1.2')
 parser.add_argument('--lamda_dis', type=float, default=0.1)
@@ -39,7 +36,7 @@ param['lr_config'] = {'beta': [0.5, 0.999], 'lr': 2.5e-5, 'lr_dis': 1e-5,
                       'decay_rate': 0.5, 'decay_epoch': decay_dict[param['task']], 'gamma': 0.98}
 param['trainsize'] = 384
 param['optim'] = "AdamW"
-param['loss'] = args.loss
+param['loss'] = 'weak' if param['task']=='Weak-RGB-SOD' else 'structure'
 param['size_rates'] = [1] 
 
 ## Model Config
@@ -51,7 +48,7 @@ param['backbone'] = args.backbone
 param['decoder'] = args.decoder
 # Depth Model
 param['fusion'] = args.fusion   # [early, late, cross, rgb, aux]
-param['fusion_method'] = args.fusion_method
+param['fusion_method'] = 'refine'
 
 ##### uncertainty configs [work in process] #####
 param['uncer_method'] = args.uncer_method   # gan, vae, abp, ebm
@@ -71,7 +68,6 @@ if args.use_22k:
     param['pretrain'] = "model/swin_base_patch4_window12_384_22k.pth"
 else:
     param['pretrain'] = "model/swin_base_patch4_window12_384.pth"
-param['confiednce_learning'] = args.confiednce_learning
 
 # Model Config
 param['grid_search_lamda'] = [float(x) for x in args.grid_search_lamda.split(',')]
@@ -85,7 +81,6 @@ log_info = param['model_name'] + '_' + args.log_info    # 这个参数可以定�
 param['training_info'] = param['task'] + '_' + str(param['lr_config']['lr']) + '_' + log_info
 param['log_path'] = 'experiments/{}'.format(param['training_info'])   # 日志保存路径
 param['ckpt_save_path'] = param['log_path'] + '/models/'              # 权重保存路径
-print('[INFO] Experiments saved in: ', param['training_info'])
 
 
 # Dataset Config
