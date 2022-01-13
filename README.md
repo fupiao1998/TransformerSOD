@@ -53,7 +53,7 @@ If you think our code is helpful for your research, please cite:
 }
 ```
 ## Concat
-If you think there is a problem to discuss, please contact me via issue on github or my email :maoyuxin@mail.nwpu.edu.cn.
+If you think there is a problem to discuss, please contact me via issue on github or my email: maoyuxin@mail.nwpu.edu.cn.
 
 At the same time, we hope that our framework can include more transformer-based work for SOD tasks, so please stay tuned for our updates. Pulling requests are also welcome!
 
