@@ -4,7 +4,7 @@
 ## 配置
 所有实验在一块3090显卡上完成，所使用的pytorch版本为1.9.1，timm版本为0.4.5。
 
-同时，需要手动下载swin transformer backbone的预训练[模型](https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_base_patch4_window12_384.pth)，并放置在```model```路径下
+同时，需要手动下载swin transformer backbone的[模型](https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_base_patch4_window12_384.pth)，并放置在```model```路径下
 ## 实验
 ### 数据集
 我们使用的所有数据集均上传在[]中，可以将下载并同时修改```path_config.py```中数据集路径以及对应机器的hostname。获取hostname的方式：
