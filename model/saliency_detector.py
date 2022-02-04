@@ -58,7 +58,7 @@ class sod_model_with_vae(torch.nn.Module):
         self.backbone, self.channel_list = get_backbone(option)
         self.neck_prior = get_neck(option, self.channel_list)
         self.decoder_prior = get_decoder(option)
-        self.depth_module = get_depth_module(option)
+        self.depth_module = get_depth_module(option, self.channel_list)
         self.vae_model = vae_model(option)
         self.decoder_post = copy.deepcopy(self.decoder_prior)
         self.neck_post = copy.deepcopy(self.neck_prior)
@@ -85,8 +85,7 @@ class sod_model_with_vae(torch.nn.Module):
             return outputs_prior, outputs_post, kld
         else:   # In the testing case without gt
             outputs = self.decoder_prior(neck_features_z_prior)
-
-            return outputs
+            return {'sal_pre': outputs, 'depth_pre': None, 'backbone_features':backbone_features}
 
 
 class vae_model(nn.Module):
